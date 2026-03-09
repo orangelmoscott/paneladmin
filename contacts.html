@@ -132,6 +132,14 @@
   <nav class="dashboard-navbar">
     <div class="brand">ORM<span>Cristales</span></div>
     <div style="display: flex; gap: 1rem; align-items: center;">
+
+      <!-- User profile badge -->
+      <div
+        style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;border:1px solid rgba(14,165,233,0.2);">
+        <i data-lucide="user-circle" style="color:#0ea5e9;width:18px;height:18px;"></i>
+        <span id="current-user-display" style="font-weight:600;font-size:0.85rem;color:#0ea5e9;">Cargando...</span>
+      </div>
+
       <span class="counter-badge" id="total-counter">— solicitudes</span>
       <a href="users.html"
         style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:500;color:#64748b;text-decoration:none;padding:0.4rem 0.8rem;background:#f1f5f9;border-radius:8px;">
@@ -251,9 +259,17 @@
 
     async function fetchContacts() {
       const token = localStorage.getItem('token');
+      const adminUser = localStorage.getItem('adminUser') || 'Admin';
+
       if (!token) {
         window.location.href = 'index.html?session=expired';
         return;
+      }
+
+      // Mostrar usuario en la barra superior
+      const userDisplay = document.getElementById('current-user-display');
+      if (userDisplay) {
+        userDisplay.textContent = adminUser;
       }
 
       const table = document.getElementById('contacts-table');

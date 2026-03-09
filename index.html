@@ -91,6 +91,7 @@
             if (response.ok && data.token) {
                 sessionStorage.setItem('loginFails', '0');
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('adminUser', username);
                 window.location.href = 'contacts.html';
             } else {
                 failCount++;
