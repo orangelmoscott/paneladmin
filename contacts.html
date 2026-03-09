@@ -314,21 +314,21 @@
           const row = document.createElement('tr');
           const statusClass = `status-${contact.status || 'pendiente'}`;
           row.innerHTML = `
-                    <td class="customer-name">
+                    <td class="customer-name" data-label="Cliente">
                         <div style="display:flex; align-items:center; gap:0.5rem">
                             <i data-lucide="user" class="icon-sm" style="color:#94a3b8"></i>
                             ${contact.name || 'Sin nombre'}
                         </div>
                     </td>
-                    <td>
+                    <td data-label="Teléfono">
                         ${contact.telefono
               ? `<a href="tel:${contact.telefono}" class="phone-link"><i data-lucide="phone" class="icon-sm"></i>${contact.telefono}</a>`
               : '<span style="color:#cbd5e1">—</span>'
             }
                     </td>
-                    <td class="customer-email" style="font-size:0.9rem">${contact.email || '—'}</td>
-                    <td class="message-cell">${contact.message || '—'}</td>
-                    <td>
+                    <td class="customer-email" style="font-size:0.9rem" data-label="Email">${contact.email || '—'}</td>
+                    <td class="message-cell" data-label="Mensaje">${contact.message || '—'}</td>
+                    <td data-label="Estado">
                         <select 
                             id="status-${contact._id}"
                             class="status-select ${statusClass}"
@@ -339,7 +339,7 @@
                             <option value="presupuesto_enviado" ${contact.status === 'presupuesto_enviado' ? 'selected' : ''}>🟢 Enviado</option>
                         </select>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                         <div class="actions-cell">
                             <a href="mailto:${contact.email}?subject=Presupuesto ORM Cristales&body=Hola ${contact.name}," class="btn-email" title="Enviar email">
                                 <i data-lucide="mail" class="icon-sm"></i>
