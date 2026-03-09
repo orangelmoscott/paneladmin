@@ -1,56 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login - OMR Cristales</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Acceso Administrador - ORM Cristales</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Icons (Lucide) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="admin-style.css">
 </head>
-<body class="d-flex align-items-center justify-content-center vh-100">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-4">
-        <h2 class="text-center mb-4">Inicio de Sesión</h2>
-        <form id="login-form">
-          <div class="mb-3">
-            <label for="username" class="form-label">Usuario</label>
-            <input type="text" class="form-control" id="username" required>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="password" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
-        </form>
+
+<body>
+
+  <div class="login-container">
+    <div class="login-box glass-card">
+      <div class="login-header">
+        <span class="brand">ORM<span>Cristales</span></span>
+        <p>Panel de Administración</p>
       </div>
+
+      <div id="alert-box" class="alert alert-error hidden">Error al iniciar sesión</div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Usuario</label>
+          <input type="text" id="username" placeholder="Ingresa tu usuario" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" placeholder="Tu contraseña de acceso" required
+            autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn-primary" id="submit-btn" style="margin-top: 1rem;">
+          Ingresar al Panel <i data-lucide="log-in" class="icon-sm"></i>
+        </button>
+      </form>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    document.getElementById('login-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+    lucide.createIcons();
 
-        try {
-            const response = await fetch('https://serverormcristales.onrender.com/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
-            const data = await response.json();
-            if (data.token) {
-                localStorage.setItem('token', data.token); // Guarda el token en localStorage
-                window.location.href = 'contacts.html'; // Redirige a la página de contactos
-            } else {
-                alert(data.message);
-            }
-        } catch (error) {
-            alert('Error de conexión');
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const submitBtn = document.getElementById('submit-btn');
+      const alertBox = document.getElementById('alert-box');
+
+      // Loading state
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = 'Verificando... <i data-lucide="loader" class="icon-sm spin"></i>';
+      submitBtn.disabled = true;
+      lucide.createIcons();
+      alertBox.classList.add('hidden');
+
+      try {
+        const response = await fetch('https://serverormcristales.onrender.com/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.token) {
+          localStorage.setItem('token', data.token); // Guarda el token en localStorage
+          window.location.href = 'contacts.html'; // Redirige a la página de contactos
+        } else {
+          alertBox.textContent = data.message || 'Credenciales incorrectas';
+          alertBox.classList.remove('hidden');
         }
+      } catch (error) {
+        alertBox.textContent = 'Error de conexión con el servidor. Intenta de nuevo.';
+        alertBox.classList.remove('hidden');
+      } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        lucide.createIcons();
+      }
     });
+
+    // Validar si ya hay token, redirigir automático si es válido
+    if (localStorage.getItem('token')) {
+      window.location.href = 'contacts.html';
+    }
   </script>
 </body>
+
 </html>
