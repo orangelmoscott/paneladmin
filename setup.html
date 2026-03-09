@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configuración Inicial - ORM Cristales</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box glass-card">
+            <div class="login-header">
+                <span class="brand">ORM<span>Cristales</span></span>
+                <p>Crear Primer Administrador</p>
+            </div>
+
+            <div
+                style="background:#fef3c7;color:#92400e;padding:0.75rem 1rem;border-radius:10px;font-size:0.875rem;margin-bottom:1.5rem;">
+                ⚠️ Esta página solo es necesaria la <strong>primera vez</strong>. Una vez creado, guarda bien tu usuario
+                y contraseña.
+            </div>
+
+            <div id="alert-box" class="alert" style="display:none;"></div>
+
+            <form id="setup-form">
+                <div class="form-group">
+                    <label for="username">Nombre de Usuario Admin</label>
+                    <input type="text" id="username" placeholder="ej. orm_admin" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="Mínimo 8 caracteres" minlength="8" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm">Confirmar Contraseña</label>
+                    <input type="password" id="confirm" placeholder="Repite tu contraseña" required>
+                </div>
+                <button type="submit" class="btn-primary" id="setup-btn" style="margin-top:1rem;">
+                    Crear Cuenta <i data-lucide="check-circle-2" class="icon-sm"></i>
+                </button>
+            </form>
+
+            <p style="text-align:center;margin-top:1.5rem;font-size:0.85rem;color:#94a3b8;">
+                ¿Ya tienes cuenta? <a href="index.html" style="color:#0ea5e9;font-weight:600;">Iniciar Sesión →</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        document.getElementById('setup-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm').value;
+            const btn = document.getElementById('setup-btn');
+            const alert = document.getElementById('alert-box');
+
+            alert.style.display = 'none';
+
+            if (password !== confirm) {
+                alert.textContent = '❌ Las contraseñas no coinciden.';
+                alert.style.background = '#fee2e2';
+                alert.style.color = '#b91c1c';
+                alert.style.display = 'block';
+                return;
+            }
+
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = 'Creando cuenta... <i data-lucide="loader" class="icon-sm spin"></i>';
+            btn.disabled = true;
+            lucide.createIcons();
+
+            try {
+                const response = await fetch('https://serverormcristales.onrender.com/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    alert.textContent = `✅ Cuenta "${username}" creada con éxito. Redirigiendo al login...`;
+                    alert.style.background = '#dcfce7';
+                    alert.style.color = '#166534';
+                    alert.style.display = 'block';
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                } else {
+                    const data = await response.json();
+                    alert.textContent = `❌ ${data.message || 'Error al crear la cuenta.'}`;
+                    alert.style.background = '#fee2e2';
+                    alert.style.color = '#b91c1c';
+                    alert.style.display = 'block';
+                }
+            } catch {
+                alert.textContent = '❌ Error de conexión. El servidor puede estar iniciando, espera 30s e intenta de nuevo.';
+                alert.style.background = '#fee2e2';
+                alert.style.color = '#b91c1c';
+                alert.style.display = 'block';
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+
+</html>

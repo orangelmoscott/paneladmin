@@ -129,11 +129,14 @@
 
 <body>
 
-  <!-- Navbar -->
   <nav class="dashboard-navbar">
     <div class="brand">ORM<span>Cristales</span></div>
     <div style="display: flex; gap: 1rem; align-items: center;">
       <span class="counter-badge" id="total-counter">— solicitudes</span>
+      <a href="users.html"
+        style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:500;color:#64748b;text-decoration:none;padding:0.4rem 0.8rem;background:#f1f5f9;border-radius:8px;">
+        <i data-lucide="users" class="icon-sm"></i> Equipo
+      </a>
       <button onclick="logout()" class="btn-danger">
         <i data-lucide="log-out" class="icon-sm"></i> Cerrar Sesión
       </button>
@@ -249,7 +252,7 @@
     async function fetchContacts() {
       const token = localStorage.getItem('token');
       if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = 'index.html?session=expired';
         return;
       }
 
@@ -273,7 +276,7 @@
         if (!response.ok) {
           if (response.status === 401 || response.status === 403) {
             localStorage.removeItem('token');
-            window.location.href = 'index.html';
+            window.location.href = 'index.html?session=expired';
             return;
           }
           throw new Error('Server error');
