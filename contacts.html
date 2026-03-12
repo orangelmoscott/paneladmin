@@ -4,8 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Solicitudes de Presupuesto - ORM Cristales</title>
-
+  <title>Solicitudes - ORM Cristales</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -13,19 +12,15 @@
     rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="admin-style.css">
-
   <style>
-    .status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      font-size: 0.8rem;
+    .status-select {
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      border: none;
       cursor: pointer;
-      transition: all 0.2s ease;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
     }
 
     .status-pendiente {
@@ -42,47 +37,6 @@
       background: #dcfce7;
       color: #166534;
     }
-
-    .status-select {
-      padding: 0.3rem 0.6rem;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      font-size: 0.85rem;
-      cursor: pointer;
-      font-family: var(--font-body);
-      background: white;
-    }
-
-    .actions-cell {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .phone-link {
-      color: #0ea5e9;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-weight: 500;
-    }
-
-    .phone-link:hover {
-      text-decoration: underline;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .counter-badge {
-      background: linear-gradient(135deg, #0ea5e9, #06b6d4);
-      color: white;
-      padding: 0.2rem 0.75rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
   </style>
 </head>
 
@@ -90,242 +44,117 @@
 
   <nav class="dashboard-navbar">
     <div class="brand">ORM<span>Cristales</span></div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-
-      <!-- User profile badge -->
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;">
       <div
-        style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;border:1px solid rgba(14,165,233,0.2);">
-        <i data-lucide="user-circle" style="color:#0ea5e9;width:18px;height:18px;"></i>
-        <span id="current-user-display" style="font-weight:600;font-size:0.85rem;color:#0ea5e9;">Cargando...</span>
+        style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;">
+        <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
+        <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
       </div>
-
-      <span class="counter-badge" id="total-counter">— solicitudes</span>
-      <a href="clients.html"
-        style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:500;color:#64748b;text-decoration:none;padding:0.4rem 0.8rem;background:#f1f5f9;border-radius:8px;">
-        <i data-lucide="briefcase" class="icon-sm"></i> Clientes
-      </a>
-      <a href="users.html"
-        style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:500;color:#64748b;text-decoration:none;padding:0.4rem 0.8rem;background:#f1f5f9;border-radius:8px;">
-        <i data-lucide="users" class="icon-sm"></i> Equipo
-      </a>
-      <button onclick="logout()" class="btn-danger">
-        <i data-lucide="log-out" class="icon-sm"></i> Cerrar Sesión
-      </button>
+      <a href="clients.html" class="tab">Clientes</a>
+      <a href="users.html" class="tab">Equipo</a>
+      <button onclick="logout()" class="btn-danger">Salir</button>
     </div>
   </nav>
 
   <div class="dashboard-container">
     <div class="dashboard-header">
       <div>
-        <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Solicitudes de Presupuesto</h2>
-        <p style="color: #64748b;">Gestiona las peticiones de clientes. Cambia el estado o elimina registros.</p>
+        <h1>Solicitudes de Presupuesto</h1>
+        <p style="color: #64748b;">Gestiona los mensajes de clientes potenciales.</p>
       </div>
-      <button onclick="fetchContacts()" class="btn-primary" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">
-        <i data-lucide="refresh-cw" class="icon-sm"></i> Recargar
-      </button>
+      <button onclick="fetchContacts()" class="btn-primary"><i data-lucide="refresh-cw"></i> Actualizar</button>
     </div>
 
-    <div class="glass-card table-wrapper">
-
-      <div id="loading-state" class="empty-state">
-        <i data-lucide="loader" class="spin"></i>
-        <h3 style="color: #0ea5e9;">Cargando solicitudes...</h3>
-        <p>Conectando con el servidor...</p>
+    <div class="glass-card">
+      <div class="table-wrapper">
+        <table class="custom-table" id="contacts-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Contacto</th>
+              <th>Mensaje</th>
+              <th>Estado</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-body">
+            <tr>
+              <td colspan="5" style="text-align:center;">Cargando solicitudes...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      <div id="error-state" class="empty-state hidden">
-        <i data-lucide="alert-triangle" style="color: #ef4444;"></i>
-        <h3 style="color: #ef4444;">Error de Autenticación</h3>
-        <p>Tu sesión ha expirado. <a href="index.html" style="color: #0ea5e9;">Vuelve a iniciar sesión.</a></p>
-      </div>
-
-      <div id="empty-state" class="empty-state hidden">
-        <i data-lucide="inbox"></i>
-        <h3>Bandeja Vacía</h3>
-        <p>Aún no hay solicitudes de presupuesto en la base de datos.</p>
-      </div>
-
-      <table class="custom-table hidden" id="contacts-table">
-        <thead>
-          <tr>
-            <th width="17%">Cliente</th>
-            <th width="17%">Teléfono</th>
-            <th width="18%">Email</th>
-            <th width="28%">Mensaje</th>
-            <th width="12%">Estado</th>
-            <th width="8%">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="contacts-body">
-        </tbody>
-      </table>
     </div>
   </div>
 
   <script>
-    const API = 'https://serverormcristales.onrender.com';
-    lucide.createIcons();
-
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = 'index.html';
-    }
-
-    function getStatusLabel(status) {
-      const map = {
-        'pendiente': '🟡 Pendiente',
-        'contactado': '🔵 Contactado',
-        'presupuesto_enviado': '🟢 Presupuesto Enviado'
-      };
-      return map[status] || status;
-    }
-
-    async function updateStatus(id, newStatus) {
-      const token = localStorage.getItem('token');
-      try {
-        const res = await fetch(`${API}/contacts/${id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': token },
-          body: JSON.stringify({ status: newStatus })
-        });
-        if (!res.ok) throw new Error();
-        const selectEl = document.getElementById(`status-${id}`);
-        if (selectEl) {
-          selectEl.className = `status-select status-${newStatus}`;
-        }
-      } catch {
-        alert('Error al actualizar el estado. Intenta de nuevo.');
-      }
-    }
-
-    async function deleteContact(id, rowEl) {
-      if (!confirm('¿Seguro que deseas eliminar esta solicitud? Esta acción no se puede deshacer.')) return;
-      const token = localStorage.getItem('token');
-      try {
-        const res = await fetch(`${API}/contacts/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': token }
-        });
-        if (!res.ok) throw new Error();
-        rowEl.style.opacity = '0';
-        rowEl.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => rowEl.remove(), 300);
-
-        // Update counter
-        const counter = document.getElementById('total-counter');
-        const current = parseInt(counter.textContent);
-        if (!isNaN(current)) counter.textContent = `${current - 1} solicitudes`;
-      } catch {
-        alert('Error al eliminar. Intenta de nuevo.');
-      }
-    }
-
-    async function fetchContacts() {
-      const token = localStorage.getItem('token');
-      const adminUser = localStorage.getItem('adminUser') || 'Admin';
-
-      if (!token) {
-        window.location.href = 'index.html?session=expired';
-        return;
-      }
-
-      // Mostrar usuario en la barra superior
-      const userDisplay = document.getElementById('current-user-display');
-      if (userDisplay) {
-        userDisplay.textContent = adminUser;
-      }
-
-      const table = document.getElementById('contacts-table');
-      const tbody = document.getElementById('contacts-body');
-      const loadingState = document.getElementById('loading-state');
-      const emptyState = document.getElementById('empty-state');
-      const errorState = document.getElementById('error-state');
-
-      // Reset states
-      table.classList.add('hidden');
-      emptyState.classList.add('hidden');
-      errorState.classList.add('hidden');
-      loadingState.classList.remove('hidden');
-
-      try {
-        const response = await fetch(`${API}/contacts`, {
-          headers: { 'Authorization': token }
-        });
-
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem('token');
-            window.location.href = 'index.html?session=expired';
-            return;
-          }
-          throw new Error('Server error');
-        }
-
-        const contacts = await response.json();
-        loadingState.classList.add('hidden');
-
-        if (contacts.length === 0) {
-          emptyState.classList.remove('hidden');
-          return;
-        }
-
-        // Update counter
-        document.getElementById('total-counter').textContent = `${contacts.length} solicitudes`;
-
-        tbody.innerHTML = '';
-        contacts.forEach(contact => {
-          const row = document.createElement('tr');
-          const statusClass = `status-${contact.status || 'pendiente'}`;
-          row.innerHTML = `
-                    <td class="customer-name" data-label="Cliente">
-                        <div style="display:flex; align-items:center; gap:0.5rem">
-                            <i data-lucide="user" class="icon-sm" style="color:#94a3b8"></i>
-                            ${contact.name || 'Sin nombre'}
-                        </div>
-                    </td>
-                    <td data-label="Teléfono">
-                        ${contact.telefono
-              ? `<a href="tel:${contact.telefono}" class="phone-link"><i data-lucide="phone" class="icon-sm"></i>${contact.telefono}</a>`
-              : '<span style="color:#cbd5e1">—</span>'
-            }
-                    </td>
-                    <td class="customer-email" style="font-size:0.9rem" data-label="Email">${contact.email || '—'}</td>
-                    <td class="message-cell" data-label="Mensaje">${contact.message || '—'}</td>
-                    <td data-label="Estado">
-                        <select 
-                            id="status-${contact._id}"
-                            class="status-select ${statusClass}"
-                            onchange="updateStatus('${contact._id}', this.value)"
-                        >
-                            <option value="pendiente" ${contact.status === 'pendiente' ? 'selected' : ''}>🟡 Pendiente</option>
-                            <option value="contactado" ${contact.status === 'contactado' ? 'selected' : ''}>🔵 Contactado</option>
-                            <option value="presupuesto_enviado" ${contact.status === 'presupuesto_enviado' ? 'selected' : ''}>🟢 Enviado</option>
-                        </select>
-                    </td>
-                    <td data-label="Acciones">
-                        <div class="actions-cell">
-                            <a href="mailto:${contact.email}?subject=Presupuesto ORM Cristales&body=Hola ${contact.name}," class="btn-email" title="Enviar email">
-                                <i data-lucide="mail" class="icon-sm"></i>
-                            </a>
-                            <button onclick="deleteContact('${contact._id}', this.closest('tr'))" class="btn-delete" title="Eliminar">
-                                <i data-lucide="trash-2" class="icon-sm"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-          tbody.appendChild(row);
-        });
-
-        table.classList.remove('hidden');
+        const API = 'https://serverormcristales.onrender.com';
         lucide.createIcons();
 
-      } catch (error) {
-        loadingState.classList.add('hidden');
-        errorState.classList.remove('hidden');
-      }
-    }
+        function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
+        document.getElementById('nav-user').textContent = localStorage.getItem('adminUser') || 'Admin';
 
-    document.addEventListener('DOMContentLoaded', fetchContacts);
+        async function fetchContacts() {
+            const token = localStorage.getItem('token');
+            const tbody = document.getElementById('contacts-body');
+            try {
+                const res = await fetch(`${API}/contacts`, { headers: { 'Authorization': token }});
+                const contacts = await res.json();
+                tbody.innerHTML = contacts.length ? '' : '<tr><td colspan="5" style="text-align:center;">No hay solicitudes pendientes.</td></tr>';
+                
+                contacts.forEach(c => {
+                    const tr = document.createElement('tr');
+                    const statusClass = `status-${c.status || 'pendiente'}`;
+                    tr.innerHTML = `
+                        <td data-label="Cliente">
+                            <div style="display:flex; align-items:center; gap:0.5rem">
+                                <i data-lucide="user" class="icon-sm" style="color:#94a3b8"></i>
+                                <strong>${c.name || 'Anónimo'}</strong>
+                            </div>
+                        </td>
+                        <td data-label="Contacto">
+                            <a href="tel:${c.telefono}" style="color:var(--color-primary); display:block;"><i data-lucide="phone" class="icon-sm"></i> ${c.telefono}</a>
+                            <small style="color:#64748b">${c.email}</small>
+                        </td>
+                        <td data-label="Mensaje" style="max-width:300px; font-size:0.85rem; color:#475569;">${c.message || '—'}</td>
+                        <td data-label="Estado">
+                            <select onchange="updateStatus('${c._id}', this.value)" class="status-select ${statusClass}">
+                                <option value="pendiente" ${c.status === 'pendiente' ? 'selected' : ''}>🟡 Pendiente</option>
+                                <option value="contactado" ${c.status === 'contactado' ? 'selected' : ''}>🔵 Contactado</option>
+                                <option value="presupuesto_enviado" ${c.status === 'presupuesto_enviado' ? 'selected' : ''}>🟢 Enviado</option>
+                            </select>
+                        </td>
+                        <td data-label="Acciones" style="text-align: right;">
+                            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                                <a href="mailto:${c.email}" class="btn-email"><i data-lucide="mail"></i></a>
+                                <button onclick="deleteContact('${c._id}')" class="btn-delete"><i data-lucide="trash-2"></i></button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Error al cargar.</td></tr>'; }
+            lucide.createIcons();
+        }
+
+        async function updateStatus(id, status) {
+            const token = localStorage.getItem('token');
+            await fetch(`${API}/contacts/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                body: JSON.stringify({ status })
+            });
+            fetchContacts();
+        }
+
+        async function deleteContact(id) {
+            if(!confirm('¿Eliminar registro?')) return;
+            await fetch(`${API}/contacts/${id}`, { method: 'DELETE', headers: { 'Authorization': localStorage.getItem('token') }});
+            fetchContacts();
+        }
+
+        if(!localStorage.getItem('token')) window.location.href = 'index.html';
+        else fetchContacts();
   </script>
 </body>
 
