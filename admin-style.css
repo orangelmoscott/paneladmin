@@ -181,6 +181,53 @@ a {
     background: #fca5a5;
 }
 
+.btn-delete {
+    width: 36px;
+    height: 36px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-delete:hover {
+    background: #fca5a5;
+    transform: scale(1.1);
+}
+
+.btn-email {
+    width: 36px;
+    height: 36px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.btn-email:hover {
+    background: #bfdbfe;
+    transform: scale(1.1);
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
 /* ----- DASHBOARD STYLES ----- */
 .dashboard-navbar {
     display: flex;

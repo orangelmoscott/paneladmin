@@ -61,6 +61,10 @@
                 <span id="current-user-display"
                     style="font-weight:600;font-size:0.85rem;color:#0ea5e9;">Cargando...</span>
             </div>
+            <a href="clients.html"
+                style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:500;color:#64748b;text-decoration:none;padding:0.4rem 0.8rem;background:#f1f5f9;border-radius:8px;">
+                <i data-lucide="briefcase" class="icon-sm"></i> Clientes
+            </a>
             <a href="contacts.html"
                 style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;font-weight:500;color:#64748b;text-decoration:none;padding:0.4rem 0.8rem;background:#f1f5f9;border-radius:8px;">
                 <i data-lucide="inbox" class="icon-sm"></i> Solicitudes
@@ -153,83 +157,179 @@
                     </li>
                 </ul>
             </div>
-        </div>
-    </div>
+            <!-- Listado de usuarios -->
+            <div class="glass-card" style="padding: 2rem; grid-column: span 2;">
+                <div
+                    style="display:flex; align-items:center; justify-content:between; gap:0.75rem; margin-bottom:1.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                        <div
+                            style="background:linear-gradient(135deg,#10b981,#059669);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                            <i data-lucide="users" style="width:20px;height:20px;color:white;"></i>
+                        </div>
+                        <h3 style="font-size:1.25rem;">Usuarios del Equipo</h3>
+                    </div>
+                    <button onclick="fetchUsers()" class="btn-primary"
+                        style="padding: 0.5rem 1rem; font-size: 0.8rem; margin-left: auto;">
+                        <i data-lucide="refresh-cw" class="icon-sm"></i> Actualizar
+                    </button>
+                </div>
 
-    <script>
-        lucide.createIcons();
+                <div class="table-wrapper">
+                    <table class="custom-table" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>ID</th>
+                                <th style="text-align:right;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body">
+                            <!-- Los usuarios se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = 'index.html';
-        }
+            <!-- Crear nuevo usuario -->
+            <div class="glass-card" style="padding: 2rem;">
+                <!-- ... contenido existente ... -->
 
-        // Verificar sesión
-        if (!localStorage.getItem('token')) {
-            window.location.href = 'index.html?session=expired';
-        }
+                <script>
+                    lucide.createIcons();
 
-        // Mostrar usuario en la barra superior
-        const adminUser = localStorage.getItem('adminUser') || 'Admin';
-        const userDisplay = document.getElementById('current-user-display');
-        if (userDisplay) {
-            userDisplay.textContent = adminUser;
-        }
+                    function logout() {
+                        localStorage.removeItem('token');
+                        window.location.href = 'index.html';
+                    }
 
-        document.getElementById('create-user-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
+                    // Verificar sesión
+                    if (!localStorage.getItem('token')) {
+                        window.location.href = 'index.html?session=expired';
+                    }
 
-            const username = document.getElementById('new-username').value.trim();
-            const password = document.getElementById('new-password').value;
-            const confirm = document.getElementById('confirm-password').value;
-            const btn = document.getElementById('create-btn');
-            const successMsg = document.getElementById('success-msg');
-            const errorMsg = document.getElementById('error-msg');
+                    // Mostrar usuario en la barra superior
+                    const adminUser = localStorage.getItem('adminUser') || 'Admin';
+                    const userDisplay = document.getElementById('current-user-display');
+                    if (userDisplay) {
+                        userDisplay.textContent = adminUser;
+                    }
 
-            successMsg.style.display = 'none';
-            errorMsg.style.display = 'none';
+                    async function fetchUsers() {
+                        const token = localStorage.getItem('token');
+                        const tbody = document.getElementById('users-body');
 
-            if (password !== confirm) {
-                errorMsg.textContent = '❌ Las contraseñas no coinciden.';
-                errorMsg.style.display = 'block';
-                return;
-            }
+                        try {
+                            const response = await fetch('https://serverormcristales.onrender.com/users', {
+                                headers: { 'Authorization': token }
+                            });
 
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = 'Creando... <i data-lucide="loader" class="icon-sm spin"></i>';
-            btn.disabled = true;
-            lucide.createIcons();
+                            if (!response.ok) throw new Error();
 
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('https://serverormcristales.onrender.com/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': token
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+                            const users = await response.json();
+                            tbody.innerHTML = '';
 
-                if (response.ok) {
-                    successMsg.textContent = `✅ Usuario "${username}" creado con éxito. Ya puede iniciar sesión.`;
-                    successMsg.style.display = 'block';
-                    document.getElementById('create-user-form').reset();
-                } else {
-                    const data = await response.json();
-                    errorMsg.textContent = `❌ ${data.message || 'Error al crear usuario.'}`;
-                    errorMsg.style.display = 'block';
-                }
-            } catch {
-                errorMsg.textContent = '❌ Error de conexión con el servidor.';
-                errorMsg.style.display = 'block';
-            } finally {
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                lucide.createIcons();
-            }
-        });
-    </script>
+                            users.forEach(user => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                        <td data-label="Usuario">
+                            <div style="display:flex; align-items:center; gap:0.5rem">
+                                <i data-lucide="user" class="icon-sm" style="color:#94a3b8"></i>
+                                <strong>${user.username}</strong>
+                            </div>
+                        </td>
+                        <td data-label="ID" style="font-size:0.75rem; color:#94a3b8; font-family: monospace;">${user._id}</td>
+                        <td data-label="Acciones" style="text-align:right;">
+                            <button onclick="deleteUser('${user._id}', '${user.username}')" class="btn-delete" title="Eliminar Usuario">
+                                <i data-lucide="user-minus" class="icon-sm"></i>
+                            </button>
+                        </td>
+                    `;
+                                tbody.appendChild(row);
+                            });
+                            lucide.createIcons();
+                        } catch (error) {
+                            console.error('Error fetching users:', error);
+                        }
+                    }
+
+                    async function deleteUser(id, username) {
+                        if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${username}"?`)) return;
+
+                        const token = localStorage.getItem('token');
+                        try {
+                            const response = await fetch(`https://serverormcristales.onrender.com/users/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': token }
+                            });
+
+                            if (response.ok) {
+                                fetchUsers();
+                            } else {
+                                alert('No se pudo eliminar el usuario.');
+                            }
+                        } catch (error) {
+                            alert('Error de conexión.');
+                        }
+                    }
+
+                    document.getElementById('create-user-form').addEventListener('submit', async function (e) {
+                        e.preventDefault();
+
+                        const username = document.getElementById('new-username').value.trim();
+                        const password = document.getElementById('new-password').value;
+                        const confirm = document.getElementById('confirm-password').value;
+                        const btn = document.getElementById('create-btn');
+                        const successMsg = document.getElementById('success-msg');
+                        const errorMsg = document.getElementById('error-msg');
+
+                        successMsg.style.display = 'none';
+                        errorMsg.style.display = 'none';
+
+                        if (password !== confirm) {
+                            errorMsg.textContent = '❌ Las contraseñas no coinciden.';
+                            errorMsg.style.display = 'block';
+                            return;
+                        }
+
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = 'Creando... <i data-lucide="loader" class="icon-sm spin"></i>';
+                        btn.disabled = true;
+                        lucide.createIcons();
+
+                        try {
+                            const token = localStorage.getItem('token');
+                            const response = await fetch('https://serverormcristales.onrender.com/register', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': token
+                                },
+                                body: JSON.stringify({ username, password })
+                            });
+
+                            if (response.ok) {
+                                successMsg.textContent = `✅ Usuario "${username}" creado con éxito.`;
+                                successMsg.style.display = 'block';
+                                document.getElementById('create-user-form').reset();
+                                fetchUsers(); // Actualizar lista
+                            } else {
+                                const data = await response.json();
+                                errorMsg.textContent = `❌ ${data.message || 'Error al crear usuario.'}`;
+                                errorMsg.style.display = 'block';
+                            }
+                        } catch {
+                            errorMsg.textContent = '❌ Error de conexión con el servidor.';
+                            errorMsg.style.display = 'block';
+                        } finally {
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                            lucide.createIcons();
+                        }
+                    });
+
+                    // Cargar usuarios al iniciar
+                    fetchUsers();
+                </script>
 </body>
 
 </html>
