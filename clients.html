@@ -145,10 +145,21 @@
 
     <nav class="dashboard-navbar">
         <div class="brand">ORM<span>Cristales</span></div>
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;">
-            <a href="contacts.html" class="tab">Solicitudes</a>
-            <a href="users.html" class="tab">Equipo</a>
-            <button onclick="logout()" class="btn-danger">Salir</button>
+        <div class="nav-links">
+            <div
+                style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;">
+                <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
+                <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
+            </div>
+            <a href="contacts.html" class="nav-link">
+                <i data-lucide="inbox"></i> Solicitudes
+            </a>
+            <a href="users.html" class="nav-link">
+                <i data-lucide="users"></i> Equipo
+            </a>
+            <button onclick="logout()" class="btn-danger">
+                <i data-lucide="log-out"></i> Salir
+            </button>
         </div>
     </nav>
 
@@ -170,8 +181,7 @@
                 <h3 style="margin-bottom: 1.5rem;">Clientes Activos</h3>
                 <div class="search-wrapper">
                     <i data-lucide="search"></i>
-                    <input type="text" id="search-client" placeholder="Buscar por nombre..." oninput="filterClients()"
-                        style="background: white !important;">
+                    <input type="text" id="search-client" placeholder="Buscar por nombre..." oninput="filterClients()">
                 </div>
                 <div id="loading-clients" class="empty-state"><i data-lucide="loader" class="spin"></i></div>
                 <div id="clients-list" class="sidebar-list"></div>
@@ -328,6 +338,10 @@
         let signaturePad, clients = [], selectedClient = null;
 
         function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
+
+        // Perfil nombre
+        const userEl = document.getElementById('nav-user');
+        if (userEl) userEl.textContent = localStorage.getItem('adminUser') || 'Admin';
 
         function openModal(id) {
             document.getElementById(id).style.display = 'flex';
@@ -489,22 +503,26 @@
                 margin: { top: 85 }
             });
 
-            // Summary
+            // Summary - Fixed coordinates for legibility
             let finalY = doc.lastAutoTable.finalY + 15;
             doc.setFontSize(11);
-            doc.text("Subtotal (Base Imponible):", 120, finalY);
-            doc.text(`${base.toFixed(2)} €`, 175, finalY, { align: 'right' });
+            doc.setTextColor(100, 100, 100);
+            doc.text("Subtotal (Base Imponible):", 110, finalY);
+            doc.setTextColor(0);
+            doc.text(`${base.toFixed(2)} €`, 190, finalY, { align: 'right' });
 
             finalY += 8;
-            doc.text("IVA Aplicado (21%):", 120, finalY);
-            doc.text(`${iva.toFixed(2)} €`, 175, finalY, { align: 'right' });
+            doc.setTextColor(100, 100, 100);
+            doc.text("IVA Aplicado (21%):", 110, finalY);
+            doc.setTextColor(0);
+            doc.text(`${iva.toFixed(2)} €`, 190, finalY, { align: 'right' });
 
             finalY += 12;
             doc.setFontSize(14);
             doc.setFont("helvetica", "bold");
-            doc.setTextColor(15, 23, 42);
-            doc.text("TOTAL A PAGAR:", 120, finalY);
-            doc.text(`${total.toFixed(2)} €`, 175, finalY, { align: 'right' });
+            doc.setTextColor(14, 165, 233); // Blue for the final total
+            doc.text("TOTAL A PAGAR:", 110, finalY);
+            doc.text(`${total.toFixed(2)} €`, 190, finalY, { align: 'right' });
 
             doc.save(`Factura_ORM_${selectedClient.companyName.replace(/\s/g, '_')}.pdf`);
         }

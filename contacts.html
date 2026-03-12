@@ -44,15 +44,21 @@
 
   <nav class="dashboard-navbar">
     <div class="brand">ORM<span>Cristales</span></div>
-    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;">
+    <div class="nav-links">
       <div
         style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;">
         <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
         <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
       </div>
-      <a href="clients.html" class="tab">Clientes</a>
-      <a href="users.html" class="tab">Equipo</a>
-      <button onclick="logout()" class="btn-danger">Salir</button>
+      <a href="clients.html" class="nav-link">
+        <i data-lucide="briefcase"></i> Clientes
+      </a>
+      <a href="users.html" class="nav-link">
+        <i data-lucide="users"></i> Equipo
+      </a>
+      <button onclick="logout()" class="btn-danger">
+        <i data-lucide="log-out"></i> Salir
+      </button>
     </div>
   </nav>
 
@@ -88,24 +94,24 @@
   </div>
 
   <script>
-        const API = 'https://serverormcristales.onrender.com';
-        lucide.createIcons();
+    const API = 'https://serverormcristales.onrender.com';
+    lucide.createIcons();
 
-        function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
-        document.getElementById('nav-user').textContent = localStorage.getItem('adminUser') || 'Admin';
+    function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
+    document.getElementById('nav-user').textContent = localStorage.getItem('adminUser') || 'Admin';
 
-        async function fetchContacts() {
-            const token = localStorage.getItem('token');
-            const tbody = document.getElementById('contacts-body');
-            try {
-                const res = await fetch(`${API}/contacts`, { headers: { 'Authorization': token }});
-                const contacts = await res.json();
-                tbody.innerHTML = contacts.length ? '' : '<tr><td colspan="5" style="text-align:center;">No hay solicitudes pendientes.</td></tr>';
-                
-                contacts.forEach(c => {
-                    const tr = document.createElement('tr');
-                    const statusClass = `status-${c.status || 'pendiente'}`;
-                    tr.innerHTML = `
+    async function fetchContacts() {
+      const token = localStorage.getItem('token');
+      const tbody = document.getElementById('contacts-body');
+      try {
+        const res = await fetch(`${API}/contacts`, { headers: { 'Authorization': token } });
+        const contacts = await res.json();
+        tbody.innerHTML = contacts.length ? '' : '<tr><td colspan="5" style="text-align:center;">No hay solicitudes pendientes.</td></tr>';
+
+        contacts.forEach(c => {
+          const tr = document.createElement('tr');
+          const statusClass = `status-${c.status || 'pendiente'}`;
+          tr.innerHTML = `
                         <td data-label="Cliente">
                             <div style="display:flex; align-items:center; gap:0.5rem">
                                 <i data-lucide="user" class="icon-sm" style="color:#94a3b8"></i>
@@ -131,30 +137,30 @@
                             </div>
                         </td>
                     `;
-                    tbody.appendChild(tr);
-                });
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Error al cargar.</td></tr>'; }
-            lucide.createIcons();
-        }
+          tbody.appendChild(tr);
+        });
+      } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Error al cargar.</td></tr>'; }
+      lucide.createIcons();
+    }
 
-        async function updateStatus(id, status) {
-            const token = localStorage.getItem('token');
-            await fetch(`${API}/contacts/${id}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                body: JSON.stringify({ status })
-            });
-            fetchContacts();
-        }
+    async function updateStatus(id, status) {
+      const token = localStorage.getItem('token');
+      await fetch(`${API}/contacts/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({ status })
+      });
+      fetchContacts();
+    }
 
-        async function deleteContact(id) {
-            if(!confirm('¿Eliminar registro?')) return;
-            await fetch(`${API}/contacts/${id}`, { method: 'DELETE', headers: { 'Authorization': localStorage.getItem('token') }});
-            fetchContacts();
-        }
+    async function deleteContact(id) {
+      if (!confirm('¿Eliminar registro?')) return;
+      await fetch(`${API}/contacts/${id}`, { method: 'DELETE', headers: { 'Authorization': localStorage.getItem('token') } });
+      fetchContacts();
+    }
 
-        if(!localStorage.getItem('token')) window.location.href = 'index.html';
-        else fetchContacts();
+    if (!localStorage.getItem('token')) window.location.href = 'index.html';
+    else fetchContacts();
   </script>
 </body>
 
