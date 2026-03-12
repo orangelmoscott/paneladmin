@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CRM Clientes - ORM Cristales</title>
+    <title>Gestión Profesional de Clientes - ORM Cristales</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,75 +12,132 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
         rel="stylesheet">
 
+    <!-- Libraries -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <link rel="stylesheet" href="admin-style.css">
 
     <style>
         .page-layout {
             display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 2rem;
+            grid-template-columns: 380px 1fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        .sidebar-card {
+            position: sticky;
+            top: 100px;
+            height: calc(100vh - 150px);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
         }
 
         .sidebar-list {
-            max-height: 80vh;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            flex: 1;
+            padding-right: 0.5rem;
+        }
+
+        .sidebar-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
         }
 
         .client-item {
             padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            border: 1.5px solid #f1f5f9;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
+            border-radius: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .client-item:hover {
-            background: rgba(14, 165, 233, 0.05);
+            border-color: var(--color-primary);
+            background: #f0f9ff;
         }
 
         .client-item.active {
             border-color: var(--color-primary);
-            background: white;
+            background: #f0f9ff;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
         }
 
         .detail-view {
             min-height: 70vh;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .log-entry {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 1rem;
+            gap: 1.5rem;
+            padding: 1.25rem;
             border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s;
+        }
+
+        .log-entry:hover {
+            background: #fafafa;
         }
 
         .log-signature {
-            width: 80px;
-            height: 40px;
+            width: 100px;
+            height: 50px;
             object-fit: contain;
-            background: #f8fafc;
-            border-radius: 4px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
         }
 
-        .status-pill {
-            padding: 0.25rem 0.75rem;
+        .progress-container {
+            background: #f1f5f9;
+            border-radius: 10px;
+            height: 10px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: var(--color-primary);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
             border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 700;
         }
 
-        .status-pending {
-            background: #fef3c7;
-            color: #92400e;
+        .badge-info {
+            background: #e0f2fe;
+            color: #0369a1;
         }
 
-        .status-billed {
+        .badge-success {
             background: #dcfce7;
             color: #166534;
         }
@@ -88,6 +145,12 @@
         @media (max-width: 1024px) {
             .page-layout {
                 grid-template-columns: 1fr;
+            }
+
+            .sidebar-card {
+                position: static;
+                height: auto;
+                max-height: 500px;
             }
         }
     </style>
@@ -98,72 +161,92 @@
     <nav class="dashboard-navbar">
         <div class="brand">ORM<span>Cristales</span></div>
         <div style="display: flex; gap: 1rem; align-items: center;">
-            <div
-                style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;">
-                <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
-                <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
-            </div>
             <a href="contacts.html" class="tab">Solicitudes</a>
-            <button onclick="logout()" class="btn-danger" style="padding: 0.4rem 0.8rem;">Salir</button>
+            <a href="users.html" class="tab">Equipo</a>
+            <button onclick="logout()" class="btn-danger">Cerrar Sesión</button>
         </div>
     </nav>
 
     <div class="dashboard-container">
         <div class="dashboard-header">
             <div>
-                <h1>Gestión de Clientes Recurrentes</h1>
-                <p>Ingeniería de Clientes y Facturación</p>
+                <h1 style="font-size: 2.2rem; letter-spacing: -0.02em;">Gestión de Clientes</h1>
+                <p style="color: #64748b; font-size: 1.1rem;">Recurrencia, Verificación por Firma y Facturación</p>
             </div>
-            <button onclick="openModal('modal-add-client')" class="btn-primary" style="width: auto;">
-                <i data-lucide="plus"></i> Nuevo Cliente
+            <button onclick="openModal('modal-add-client')" class="btn-primary">
+                <i data-lucide="user-plus"></i> Nuevo Cliente
             </button>
         </div>
 
         <div class="page-layout">
-            <!-- Sidebar: Lista de Clientes -->
-            <div class="sidebar">
-                <h3 style="margin-bottom: 1rem;">Clientes</h3>
+            <!-- Sidebar -->
+            <div class="sidebar-card glass-card">
+                <div class="search-wrapper">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="search-client" placeholder="Buscar cliente por nombre..."
+                        oninput="filterClients()">
+                </div>
                 <div id="loading-clients" class="empty-state"><i data-lucide="loader" class="spin"></i></div>
                 <div id="clients-list" class="sidebar-list"></div>
             </div>
 
-            <!-- Detail: Visualización del Cliente Seleccionado -->
+            <!-- Detail View -->
             <div id="client-detail" class="detail-view glass-card" style="padding: 2.5rem;">
-                <div id="no-selection" class="empty-state" style="padding-top: 5rem;">
-                    <i data-lucide="mouse-pointer-2" style="width: 48px; height: 48px;"></i>
-                    <h3>Selecciona un cliente</h3>
-                    <p>Para ver su historial de servicios y generar facturación.</p>
+                <div id="no-selection" class="empty-state" style="padding: 5rem 2rem;">
+                    <div
+                        style="background: #f0f9ff; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i data-lucide="users" style="width: 40px; height: 40px; color: var(--color-primary);"></i>
+                    </div>
+                    <h3>Panel de Control de Cliente</h3>
+                    <p>Selecciona un cliente de la lista para gestionar sus limpiezas.</p>
                 </div>
 
                 <div id="detail-content" class="hidden">
                     <div
-                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; border-bottom: 2px solid #f8fafc; padding-bottom: 2rem;">
                         <div>
-                            <h2 id="det-company" style="font-size: 2rem;"></h2>
-                            <p id="det-nif" style="color: var(--color-primary); font-weight: 700;"></p>
-                            <p id="det-address" style="color: #64748b;"></p>
+                            <h2 id="det-company" style="font-size: 2.25rem; margin-bottom: 0.5rem;"></h2>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                <span id="det-nif" class="badge badge-info"></span>
+                                <span id="det-frequency" class="badge"
+                                    style="background: #f1f5f9; color: #475569;"></span>
+                            </div>
+                            <p id="det-address" style="margin-top: 1rem; color: #64748b; font-size: 0.95rem;"></p>
                         </div>
                         <div style="text-align: right;">
-                            <span id="det-frequency" class="status-pill"
-                                style="background: #e0f2fe; color: #0369a1; font-size: 0.9rem;"></span>
-                            <p id="det-price" style="font-size: 1.5rem; font-weight: 800; margin-top: 0.5rem;"></p>
+                            <p style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">
+                                Mensualidad Total</p>
+                            <span id="det-price"
+                                style="font-size: 2rem; font-weight: 800; color: var(--color-secondary);"></span>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                        <button onclick="openSignatureModal()" class="btn-primary" style="background: #10b981;">
-                            <i data-lucide="pen-tool"></i> Registrar Nueva Limpieza
+                    <!-- Seguimiento Mensual -->
+                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 1rem; display: flex; justify-content: space-between;">
+                            Seguimiento del Mes Actual
+                            <span id="cleaning-counter" style="color: var(--color-primary);">0 / 0</span>
+                        </h4>
+                        <div class="progress-container">
+                            <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+                        <p id="cleaning-status" style="font-size: 0.85rem; color: #64748b; margin: 0;"></p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
+                        <button onclick="openSignatureModal()" class="btn-primary"
+                            style="background: var(--color-success);">
+                            <i data-lucide="pen-tool"></i> Registrar Limpieza Finalizada
                         </button>
-                        <button id="btn-generate-invoice" onclick="generateInvoice()" class="btn-primary"
-                            style="background: #0f172a;">
-                            <i data-lucide="file-text"></i> Generar Factura Mensual
+                        <button id="btn-generate-invoice" onclick="generateInvoicePDF()" class="btn-primary"
+                            style="background: var(--color-secondary);">
+                            <i data-lucide="file-text"></i> Descargar Factura PDF
                         </button>
                     </div>
 
-                    <h3>Historial de Verificaciones</h3>
-                    <div id="service-logs" style="margin-top: 1rem; border-top: 1px solid #e2e8f0;">
-                        <!-- Logs here -->
-                    </div>
+                    <h3 style="margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0;">
+                        Historial de Limpiezas</h3>
+                    <div id="service-logs"></div>
                 </div>
             </div>
         </div>
@@ -173,35 +256,39 @@
     <div id="modal-add-client" class="modal-overlay">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="closeModal('modal-add-client')"><i data-lucide="x"></i></button>
-            <h2 style="margin-bottom: 1.5rem;">Registrar Cliente</h2>
+            <h2 style="margin-bottom: 2rem; text-align: center;">Registrar Cliente Master</h2>
             <form id="add-client-form">
-                <div class="form-group"><label>Nombre Empresa / Particular</label><input type="text" id="companyName"
-                        required></div>
+                <div class="form-group"><label>Empresa / Particular</label><input type="text" id="companyName" required>
+                </div>
                 <div class="form-grid">
                     <div class="form-group"><label>NIF / CIF</label><input type="text" id="nif" required></div>
-                    <div class="form-group"><label>Encargado</label><input type="text" id="encargado"></div>
+                    <div class="form-group"><label>Responsable</label><input type="text" id="encargado"></div>
                 </div>
-                <div class="form-group"><label>Dirección</label><input type="text" id="address" required></div>
+                <div class="form-group"><label>Dirección de Servicio</label><input type="text" id="address" required>
+                </div>
                 <div class="form-grid">
-                    <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+                    <div class="form-group"><label>Email Facturación</label><input type="email" id="email" required>
+                    </div>
                     <div class="form-group"><label>Teléfono</label><input type="tel" id="phone" required></div>
                 </div>
                 <div class="form-grid">
-                    <div class="form-group"><label>Servicio</label><select id="serviceType">
+                    <div class="form-group"><label>Tipo de Local</label><select id="serviceType">
                             <option value="hogar">Hogar</option>
                             <option value="oficina">Oficina</option>
                             <option value="restaurante">Restaurante</option>
                             <option value="tienda">Tienda</option>
                         </select></div>
-                    <div class="form-group"><label>Frecuencia</label><select id="frequency">
-                            <option value="semanal">Semanal</option>
-                            <option value="quincenal">Quincenal</option>
-                            <option value="mensual">Mensual</option>
+                    <div class="form-group"><label>Frecuencia de Limpieza</label><select id="frequency">
+                            <option value="semanal">Semanal (x4/x5 mes)</option>
+                            <option value="quincenal">Quincenal (x2 mes)</option>
+                            <option value="mensual">Mensual (x1 mes)</option>
                         </select></div>
                 </div>
-                <div class="form-group"><label>Precio Base (€)</label><input type="number" id="basePrice" step="0.01"
-                        required></div>
-                <button type="submit" class="btn-primary">Guardar Cliente</button>
+                <div class="form-group">
+                    <label>Importe Mensual Total (€ sin IVA)</label>
+                    <input type="number" id="basePrice" step="0.01" required placeholder="0.00">
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 1rem;">Guardar en Base de Datos</button>
             </form>
         </div>
     </div>
@@ -210,23 +297,26 @@
     <div id="modal-signature" class="modal-overlay">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="closeModal('modal-signature')"><i data-lucide="x"></i></button>
-            <h2>Verificación de Limpieza</h2>
-            <p id="sig-client-name" style="margin-bottom: 1rem; color: var(--color-primary); font-weight: 600;"></p>
+            <h2 style="text-align: center;">Verificación de Limpieza</h2>
+            <p id="sig-client-name"
+                style="text-align: center; color: var(--color-primary); font-weight: 700; margin-bottom: 2rem; font-size: 1.2rem;">
+            </p>
 
             <div class="form-group">
-                <label>Nombre de quien verifica</label>
-                <input type="text" id="verifiedBy" required placeholder="Nombre del cliente/encargado">
+                <label>Nombre de quien verifica (Cliente/Encargado)</label>
+                <input type="text" id="verifiedBy" required placeholder="Escribe el nombre del firmante">
             </div>
 
-            <label>Firma del Cliente</label>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Firma sobre el recuadro</label>
             <div class="signature-wrapper">
                 <canvas id="signature-pad"></canvas>
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button type="button" onclick="signaturePad.clear()" class="btn-danger" style="flex: 1;">Borrar
-                    Firma</button>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" onclick="signaturePad.clear()" class="btn-danger"
+                    style="flex: 1; background: #f1f5f9; color: #64748b;">Borrar</button>
                 <button type="button" onclick="saveServiceLog()" class="btn-primary"
-                    style="flex: 2; background: #10b981;">Guardar y Verificar</button>
+                    style="flex: 2; background: var(--color-success);">Finalizar Registro</button>
             </div>
         </div>
     </div>
@@ -236,13 +326,16 @@
         let signaturePad, clients = [], selectedClient = null;
 
         function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
-        
-        function openModal(id) { 
-            document.getElementById(id).style.display = 'flex'; 
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
             lucide.createIcons();
-            if(id === 'modal-signature') initSignature();
+            if (id === 'modal-signature') {
+                setTimeout(initSignature, 50);
+            }
         }
-        
+
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function initSignature() {
@@ -251,43 +344,77 @@
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
-            signaturePad = new SignaturePad(canvas);
+            if (!signaturePad) signaturePad = new SignaturePad(canvas);
+            else signaturePad.clear();
         }
 
         async function fetchClients() {
             const token = localStorage.getItem('token');
             try {
-                const res = await fetch(`${API}/clients`, { headers: { 'Authorization': token }});
+                const res = await fetch(`${API}/clients`, { headers: { 'Authorization': token } });
                 clients = await res.json();
                 renderClients();
-            } catch (e) { console.error(e); }
+            } catch (e) { document.getElementById('loading-clients').innerHTML = 'Error de conexión.'; }
             document.getElementById('loading-clients').classList.add('hidden');
         }
 
-        function renderClients() {
+        function filterClients() {
+            const query = document.getElementById('search-client').value.toLowerCase();
+            renderClients(query);
+        }
+
+        function renderClients(query = '') {
             const list = document.getElementById('clients-list');
             list.innerHTML = '';
-            clients.forEach(c => {
+            const filtered = clients.filter(c => c.companyName.toLowerCase().includes(query));
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="empty-state" style="padding:1rem;">Sin resultados</p>';
+                return;
+            }
+
+            filtered.forEach(c => {
                 const div = document.createElement('div');
-                div.className = `glass-card client-item ${selectedClient && selectedClient._id === c._id ? 'active' : ''}`;
-                div.innerHTML = `<strong>${c.companyName}</strong><br><small style="color:#64748b">${c.address}</small>`;
+                div.className = `client-item ${selectedClient && selectedClient._id === c._id ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <strong>${c.companyName}</strong>
+                        <span style="font-size:0.7rem; background:#eee; padding:2px 6px; border-radius:4px;">${c.frequency}</span>
+                    </div>
+                    <small style="color:#64748b; font-size:0.8rem; display:block; margin-top:4px;">${c.address}</small>
+                `;
                 div.onclick = () => selectClient(c);
                 list.appendChild(div);
             });
         }
 
+        function getScheduledCleanings(frequency) {
+            if (frequency === 'mensual') return 1;
+            if (frequency === 'quincenal') return 2;
+            // Semanal: depende de las semanas del mes actual
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            let weeks = 0;
+            for (let i = 1; i <= lastDay; i++) {
+                if (new Date(year, month, i).getDay() === 1) weeks++; // Lunes
+            }
+            return weeks || 4;
+        }
+
         async function selectClient(client) {
             selectedClient = client;
-            renderClients();
+            renderClients(document.getElementById('search-client').value.toLowerCase());
             document.getElementById('no-selection').classList.add('hidden');
             document.getElementById('detail-content').classList.remove('hidden');
-            
+
             document.getElementById('det-company').textContent = client.companyName;
             document.getElementById('det-nif').textContent = `NIF: ${client.nif}`;
             document.getElementById('det-address').textContent = client.address;
             document.getElementById('det-frequency').textContent = client.frequency.toUpperCase();
-            document.getElementById('det-price').textContent = `${(client.basePrice * 1.21).toFixed(2)}€ (IVA inc.)`;
-            
+            document.getElementById('det-price').textContent = `${(client.basePrice * 1.21).toFixed(2)}€`;
+
             fetchLogs(client._id);
         }
 
@@ -295,52 +422,135 @@
             const token = localStorage.getItem('token');
             const logContainer = document.getElementById('service-logs');
             logContainer.innerHTML = '<p class="empty-state">Cargando historial...</p>';
-            
+
             try {
-                const res = await fetch(`${API}/services/logs/${clientId}`, { headers: { 'Authorization': token }});
+                const res = await fetch(`${API}/services/logs/${clientId}`, { headers: { 'Authorization': token } });
                 const logs = await res.json();
+
+                // Filtrar solo las del mes actual para el contador
+                const now = new Date();
+                const currentMonthLogs = logs.filter(l => {
+                    const d = new Date(l.date);
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                });
+
+                const scheduled = getScheduledCleanings(selectedClient.frequency);
+                const performed = currentMonthLogs.length;
+                const percent = Math.min((performed / scheduled) * 100, 100);
+
+                document.getElementById('cleaning-counter').textContent = `${performed} / ${scheduled}`;
+                document.getElementById('progress-bar').style.width = `${percent}%`;
+                document.getElementById('cleaning-status').textContent = performed >= scheduled
+                    ? '✓ Objetivo de limpiezas mensual completado.'
+                    : `Faltan ${scheduled - performed} limpiezas para completar el mes.`;
+
                 logContainer.innerHTML = logs.length ? '' : '<p class="empty-state">Sin servicios registrados.</p>';
-                
+
                 logs.forEach(l => {
-                    const date = new Date(l.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const date = new Date(l.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const row = document.createElement('div');
                     row.className = 'log-entry';
                     row.innerHTML = `
-                        <div>
-                            <span style="font-weight:600">${date}</span><br>
-                            <small>${l.verifiedBy || 'Verificado'}</small>
+                        <div style="flex:1;">
+                            <span style="font-weight:700; color:var(--color-secondary);">${date}</span><br>
+                            <small style="color:#64748b">Verificado por ${l.verifiedBy || 'Cliente'}</small>
                         </div>
-                        <img src="${l.signature}" class="log-signature">
-                        <span class="status-pill status-pending">Pendiente Factura</span>
+                        <img src="${l.signature}" class="log-signature" alt="Firma">
                     `;
                     logContainer.appendChild(row);
                 });
-            } catch (e) { logContainer.innerHTML = 'Error al cargar logs.'; }
+            } catch (e) { logContainer.innerHTML = 'Error al cargar historial.'; }
         }
 
         function openSignatureModal() {
-            if(!selectedClient) return;
+            if (!selectedClient) return;
             document.getElementById('sig-client-name').textContent = selectedClient.companyName;
             openModal('modal-signature');
         }
 
         async function saveServiceLog() {
-            if(signaturePad.isEmpty()) return alert('El cliente debe firmar.');
+            if (signaturePad.isEmpty()) return alert('El cliente debe firmar para validar el servicio.');
             const verifiedBy = document.getElementById('verifiedBy').value;
-            if(!verifiedBy) return alert('Indica quién verifica.');
+            if (!verifiedBy) return alert('Por favor, introduce el nombre de la persona que verifica.');
 
             const token = localStorage.getItem('token');
             const res = await fetch(`${API}/services/log`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                body: JSON.stringify({ clientId: selectedClient._id, signature: signaturePad.toDataURL(), verifiedBy })
+                body: JSON.stringify({
+                    clientId: selectedClient._id,
+                    signature: signaturePad.toDataURL(),
+                    verifiedBy
+                })
             });
 
-            if(res.ok) {
+            if (res.ok) {
                 closeModal('modal-signature');
                 document.getElementById('verifiedBy').value = '';
                 selectClient(selectedClient);
             }
+        }
+
+        async function generateInvoicePDF() {
+            if (!selectedClient) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const base = selectedClient.basePrice;
+            const iva = base * 0.21;
+            const total = base + iva;
+            const date = new Date().toLocaleDateString('es-ES');
+
+            // Header Professional
+            doc.setFontSize(22);
+            doc.setTextColor(14, 165, 233);
+            doc.text("ORM CRISTALES", 20, 20);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text("Expertos en Limpieza Industrial y Hogar", 20, 27);
+            doc.text(`Fecha: ${date}`, 150, 20);
+            doc.text(`Factura Nº: ${Date.now().toString().slice(-6)}`, 150, 27);
+
+            // Client data
+            doc.setDrawColor(200);
+            doc.line(20, 35, 190, 35);
+
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.setFont("helvetica", "bold");
+            doc.text("FACTURAR A:", 20, 45);
+            doc.setFont("helvetica", "normal");
+            doc.text(selectedClient.companyName, 20, 52);
+            doc.text(`NIF: ${selectedClient.nif}`, 20, 59);
+            doc.text(selectedClient.address, 20, 66);
+
+            // Table
+            doc.autoTable({
+                startY: 80,
+                head: [['Descripción del Servicio', 'Frecuencia', 'Importe']],
+                body: [
+                    [`Servicio Mensual de Limpieza de Cristales (${selectedClient.serviceType.toUpperCase()})`,
+                    selectedClient.frequency.toUpperCase(),
+                    `${base.toFixed(2)} €`]
+                ],
+                theme: 'striped',
+                headStyles: { fillColor: [14, 165, 233] }
+            });
+
+            // Totals
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.text("Base Imponible:", 130, finalY);
+            doc.text(`${base.toFixed(2)} €`, 170, finalY);
+            doc.text("IVA (21%):", 130, finalY + 7);
+            doc.text(`${iva.toFixed(2)} €`, 170, finalY + 7);
+
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("TOTAL FACTURA:", 130, finalY + 16);
+            doc.text(`${total.toFixed(2)} €`, 170, finalY + 16);
+
+            doc.save(`Factura_${selectedClient.companyName.replace(/\s+/g, '_')}_${date}.pdf`);
         }
 
         // Formulario añadir cliente
@@ -363,18 +573,13 @@
                 headers: { 'Content-Type': 'application/json', 'Authorization': token },
                 body: JSON.stringify(data)
             });
-            if(res.ok) {
+            if (res.ok) {
                 closeModal('modal-add-client');
                 fetchClients();
             }
         };
 
-        function generateInvoice() {
-            const cleaningCount = document.getElementById('service-logs').children.length;
-            alert(`SISTEMA PROFESIONAL: Generando factura para ${selectedClient.companyName}.\nServicios realizados: ${cleaningCount}\nTotal Base: ${(selectedClient.basePrice * cleaningCount).toFixed(2)}€\n\nArchivo PDF preparado para descarga.`);
-        }
-
-        if(!localStorage.getItem('token')) window.location.href = 'index.html';
+        if (!localStorage.getItem('token')) window.location.href = 'index.html';
         else fetchClients();
     </script>
 </body>

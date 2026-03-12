@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Historial de Servicios - ORM Cristales</title>
+    <title>Historial Maestro - ORM Cristales</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,10 +17,15 @@
     <style>
         .service-log-card {
             padding: 1.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             display: flex;
             align-items: center;
             gap: 2rem;
+            transition: var(--transition);
+        }
+
+        .service-log-card:hover {
+            transform: translateY(-3px);
         }
 
         .signature-preview {
@@ -34,25 +39,21 @@
 
         .log-date {
             font-weight: 700;
-            color: #0f172a;
+            color: var(--color-secondary);
+            font-size: 1.1rem;
         }
 
         .log-client {
-            color: #0ea5e9;
-            font-weight: 600;
-        }
-
-        .log-price {
-            font-family: monospace;
+            color: var(--color-primary);
             font-weight: 700;
-            color: #166534;
+            font-size: 1.2rem;
         }
 
         @media (max-width: 768px) {
             .service-log-card {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
+                align-items: stretch;
+                text-align: center;
             }
 
             .signature-preview {
@@ -68,45 +69,36 @@
     <nav class="dashboard-navbar">
         <div class="brand">ORM<span>Cristales</span></div>
         <div style="display: flex; gap: 1rem; align-items: center;">
-            <a href="clients.html" style="color:#64748b; font-weight:500; font-size:0.85rem; text-decoration:none;">
-                <i data-lucide="arrow-left" class="icon-sm"></i> Volver a Clientes
-            </a>
-            <button onclick="logout()" class="btn-danger">
-                <i data-lucide="log-out" class="icon-sm"></i> Salir
-            </button>
+            <a href="clients.html" class="tab"><i data-lucide="arrow-left"
+                    style="width:14px; display:inline; vertical-align:middle;"></i> Volver</a>
+            <button onclick="logout()" class="btn-danger">Salir</button>
         </div>
     </nav>
 
     <div class="dashboard-container">
         <div class="dashboard-header">
             <div>
-                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Historial de Limpiezas Realizadas</h2>
-                <p style="color: #64748b;">Registro de verificaciones firmadas y datos para facturación.</p>
+                <h1>Historial General de Limpiezas</h1>
+                <p style="color: #64748b;">Auditoría completa de servicios verificados.</p>
             </div>
-            <button onclick="exportToCSV()" class="btn-primary"
-                style="width: auto; padding: 0.75rem 1.5rem; background: #475569;">
-                <i data-lucide="download" class="icon-sm"></i> Exportar
+            <button onclick="exportToCSV()" class="btn-primary" style="background: #475569;">
+                <i data-lucide="download"></i> Reporte Excel
             </button>
         </div>
 
         <div id="loading-state" class="empty-state">
             <i data-lucide="loader" class="spin"></i>
-            <h3>Cargando historial...</h3>
+            <h3>Sincronizando registros...</h3>
         </div>
 
-        <div id="logs-container">
-            <!-- Los registros se cargarán aquí -->
-        </div>
+        <div id="logs-container"></div>
     </div>
 
     <script>
         const API = 'https://serverormcristales.onrender.com';
         lucide.createIcons();
 
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = 'index.html';
-        }
+        function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
 
         async function fetchAllLogs() {
             const token = localStorage.getItem('token');
@@ -114,22 +106,9 @@
             const loading = document.getElementById('loading-state');
 
             try {
-                // Primero obtenemos todos los clientes para poder mapear los nombres
                 const clientsRes = await fetch(`${API}/clients`, { headers: { 'Authorization': token } });
                 const clientsList = await clientsRes.json();
-                const clientsMap = {};
-                clientsList.forEach(c => clientsMap[c._id] = c);
 
-                // Como no tenemos una ruta "get all logs" para todos los clientes a la vez (por diseño escalable),
-                // en una app real tendríamos /services/logs. Aquí simularemos pidiendo los de cada cliente
-                // o mejor, actualizaremos el server para tener una ruta global si es necesario.
-                // Por ahora, asumiremos que el usuario quiere ver los últimos servicios.
-
-                // NOTA: Para simplificar y ser profesional, lo ideal es una ruta app.get('/services/logs')
-                // Vamos a intentar obtener los logs de un cliente específico si hay uno en la URL,
-                // o mostraremos un mensaje indicando que el historial se ve por cliente.
-
-                // Pero para "wow" factor, voy a hacer que cargue los de todos los clientes encontrados.
                 let allLogs = [];
                 for (let client of clientsList) {
                     const res = await fetch(`${API}/services/logs/${client._id}`, { headers: { 'Authorization': token } });
@@ -139,76 +118,52 @@
                 }
 
                 allLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
-
                 loading.classList.add('hidden');
 
                 if (allLogs.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i data-lucide="clipboard"></i>
-                            <h3>Sin registros aún</h3>
-                            <p>Cuando realices una limpieza y el cliente firme, aparecerá aquí.</p>
-                        </div>
-                    `;
-                    lucide.createIcons();
+                    container.innerHTML = '<div class="empty-state"><h3>Sin registros</h3></div>';
                     return;
                 }
 
                 allLogs.forEach(log => {
-                    const date = new Date(log.date).toLocaleDateString('es-ES', {
-                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                    });
-
+                    const date = new Date(log.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const div = document.createElement('div');
                     div.className = 'glass-card service-log-card';
                     div.innerHTML = `
-                        <div style="flex: 1;">
-                            <p class="log-date">${date}</p>
+                        <div style="flex: 1.5;">
                             <p class="log-client">${log.clientData.companyName}</p>
-                            <p style="font-size: 0.85rem; color: #64748b;">Verificado por: <strong>${log.verifiedBy}</strong></p>
+                            <p class="log-date">${date}</p>
+                            <small style="color: #64748b;">${log.clientData.address}</small>
                         </div>
-
                         <div style="flex: 1; text-align: center;">
-                            <p style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Importe Factura</p>
-                            <p class="log-price">${log.totalPrice.toFixed(2)}€</p>
-                            <p style="font-size: 0.7rem; color: #94a3b8;">(Base: ${log.basePrice.toFixed(2)}€ + IVA: ${log.ivaAmount.toFixed(2)}€)</p>
+                            <p style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Firmado Por</p>
+                            <p style="font-weight:600;">${log.verifiedBy || 'N/A'}</p>
                         </div>
-
                         <div style="flex: 1; text-align: right;">
-                            <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.3rem;">Firma Digital</p>
                             <img src="${log.signature}" class="signature-preview" alt="Firma">
                         </div>
-
-                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                            <button onclick="notifyPayment('${log.clientData.email}', '${log.clientData.companyName}', '${log.totalPrice.toFixed(2)}')" class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #0ea5e9;">
-                                <i data-lucide="send" class="icon-sm"></i> Notificar Pago
+                        <div style="margin-left: 1rem;">
+                            <button onclick="notifyPayment('${log.clientData.email}', '${log.clientData.companyName}', '${log.totalPrice.toFixed(2)}')" class="btn-primary" style="padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px;">
+                                <i data-lucide="mail"></i>
                             </button>
                         </div>
                     `;
                     container.appendChild(div);
                 });
                 lucide.createIcons();
-
-            } catch (error) {
-                loading.textContent = '❌ Error al cargar el historial.';
-            }
+            } catch (error) { loading.textContent = 'Error al cargar.'; }
         }
 
         function notifyPayment(email, company, amount) {
-            const subject = encodeURIComponent(`Notificación de Servicio Realizado - ORM Cristales`);
-            const body = encodeURIComponent(`Hola ${company},\n\nLe informamos que el servicio de limpieza ha sido completado y verificado.\n\nEl importe total a abonar es de ${amount}€ (IVA incluido).\n\nAdjuntaremos la factura formal a la brevedad.\n\nSaludos,\nEl equipo de ORM Cristales`);
+            const subject = encodeURIComponent(`Servicio Completado - ORM Cristales`);
+            const body = encodeURIComponent(`Hola ${company},\n\nEl servicio de limpieza ha sido completado con éxito.\nImporte: ${amount}€ (IVA Inc).\n\nSaludos.`);
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
         }
 
-        function exportToCSV() {
-            alert('Función de exportación: Generando archivo Excel/CSV con los datos fiscales para contabilidad...');
-        }
+        function exportToCSV() { alert('Generando reporte consolidado...'); }
 
-        if (!localStorage.getItem('token')) {
-            window.location.href = 'index.html';
-        } else {
-            fetchAllLogs();
-        }
+        if (!localStorage.getItem('token')) window.location.href = 'index.html';
+        else fetchAllLogs();
     </script>
 </body>
 
