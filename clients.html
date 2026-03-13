@@ -225,15 +225,27 @@
                         </div>
                     </div>
 
-                    <!-- Seguimiento del mes -->
+                    <!-- Seguimiento del mes con Selector de Periodo -->
                     <div
                         style="background: #f0f9ff; padding: 2rem; border-radius: 20px; margin-bottom: 3rem; border: 1px solid #e0f2fe;">
-                        <h4
-                            style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                            Control de Limpiezas - Mes Actual
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <h4 style="margin:0;">Control de Limpiezas</h4>
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.4rem 0.8rem; border-radius: 10px; border: 1px solid #e0f2fe;">
+                                <button onclick="changeMonth(-1)" class="btn-icon"
+                                    style="background:none; border:none; cursor:pointer; color:var(--color-primary);"><i
+                                        data-lucide="chevron-left"></i></button>
+                                <span id="current-period-display"
+                                    style="font-weight: 700; min-width: 120px; text-align: center; color: var(--color-secondary);">Marzo
+                                    2026</span>
+                                <button onclick="changeMonth(1)" class="btn-icon"
+                                    style="background:none; border:none; cursor:pointer; color:var(--color-primary);"><i
+                                        data-lucide="chevron-right"></i></button>
+                            </div>
                             <span id="cleaning-counter"
                                 style="font-size: 1.25rem; font-weight: 800; color: var(--color-primary);">0 / 0</span>
-                        </h4>
+                        </div>
                         <div class="progress-container">
                             <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
                         </div>
@@ -243,7 +255,7 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
-                        <button onclick="openSignatureModal()" class="btn-primary"
+                        <button id="btn-register-cleaning" onclick="handleRegisterClick()" class="btn-primary"
                             style="background: var(--color-success); padding: 1.2rem;">
                             <i data-lucide="pen-tool"></i> Registrar Limpieza Realizada
                         </button>
@@ -395,11 +407,67 @@
             });
         }
 
+        let currentViewDate = new Date();
+
+        function changeMonth(offset) {
+            currentViewDate.setMonth(currentViewDate.getMonth() + offset);
+            updatePeriodDisplay();
+            if (selectedClient) fetchLogs(selectedClient._id);
+        }
+
+        function updatePeriodDisplay() {
+            const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('current-period-display').textContent = `${months[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+        }
+
+        async function fetchLogs(clientId) {
+            const token = localStorage.getItem('token');
+            const logContainer = document.getElementById('service-logs');
+            logContainer.innerHTML = '<p class="empty-state">Buscando historial...</p>';
+
+            try {
+                const res = await fetch(`${API}/services/logs/${clientId}`, { headers: { 'Authorization': token } });
+                const logs = await res.json();
+
+                const filteredLogs = logs.filter(l => {
+                    const d = new Date(l.date);
+                    return d.getMonth() === currentViewDate.getMonth() && d.getFullYear() === currentViewDate.getFullYear();
+                });
+
+                const scheduled = getScheduledCount(selectedClient.frequency);
+                const performed = filteredLogs.length;
+                const percent = Math.min((performed / scheduled) * 100, 100);
+
+                document.getElementById('cleaning-counter').textContent = `${performed} / ${scheduled}`;
+                document.getElementById('progress-bar').style.width = `${percent}%`;
+
+                const btn = document.getElementById('btn-register-cleaning');
+                if (performed >= scheduled) {
+                    document.getElementById('cleaning-status').innerHTML = '<i data-lucide="check-circle" style="color:#10b981; width:18px;"></i> Cupo del periodo alcanzado.';
+                    btn.innerHTML = '<i data-lucide="plus-circle"></i> Registrar Servicio Extra';
+                    btn.style.background = '#64748b'; // Extra services color
+                } else {
+                    document.getElementById('cleaning-status').innerHTML = `Faltan ${scheduled - performed} para el objetivo mensual.`;
+                    btn.innerHTML = '<i data-lucide="pen-tool"></i> Registrar Limpieza Realizada';
+                    btn.style.background = 'var(--color-success)';
+                }
+                lucide.createIcons();
+
+                logContainer.innerHTML = filteredLogs.length ? '' : '<p class="empty-state">No hay trabajos en este periodo.</p>';
+                filteredLogs.forEach(l => {
+                    const date = new Date(l.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const row = document.createElement('div');
+                    row.className = 'log-entry';
+                    row.innerHTML = `<div style="flex:1;"><strong>${date}</strong><br><small>Firmado por ${l.verifiedBy}</small></div><img src="${l.signature}" class="log-signature">`;
+                    logContainer.appendChild(row);
+                });
+            } catch (e) { logContainer.innerHTML = 'Error al cargar.'; }
+        }
+
         function getScheduledCount(freq) {
             if (freq === 'mensual') return 1;
             if (freq === 'quincenal') return 2;
-            // Semanal: aprox 4-5
-            const d = new Date();
+            const d = currentViewDate;
             const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
             let count = 0;
             for (let i = 1; i <= last; i++) {
@@ -420,44 +488,17 @@
             document.getElementById('det-frequency').textContent = client.frequency.toUpperCase();
             document.getElementById('det-price').textContent = `${(client.basePrice * 1.21).toFixed(2)}€`;
 
+            updatePeriodDisplay();
             fetchLogs(client._id);
         }
 
-        async function fetchLogs(clientId) {
-            const token = localStorage.getItem('token');
-            const logContainer = document.getElementById('service-logs');
-            logContainer.innerHTML = '<p class="empty-state">Buscando historial...</p>';
-
-            try {
-                const res = await fetch(`${API}/services/logs/${clientId}`, { headers: { 'Authorization': token } });
-                const logs = await res.json();
-
-                const now = new Date();
-                const monthLogs = logs.filter(l => {
-                    const d = new Date(l.date);
-                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                });
-
-                const scheduled = getScheduledCount(selectedClient.frequency);
-                const performed = monthLogs.length;
-                const percent = Math.min((performed / scheduled) * 100, 100);
-
-                document.getElementById('cleaning-counter').textContent = `${performed} / ${scheduled}`;
-                document.getElementById('progress-bar').style.width = `${percent}%`;
-                document.getElementById('cleaning-status').innerHTML = performed >= scheduled
-                    ? '<i data-lucide="check-circle" style="width:18px;"></i> Objetivo del mes alcanzado.'
-                    : `Faltan ${scheduled - performed} servicios para el objetivo mensual.`;
-                lucide.createIcons();
-
-                logContainer.innerHTML = logs.length ? '' : '<p class="empty-state">Aún no hay trabajos registrados.</p>';
-                logs.forEach(l => {
-                    const date = new Date(l.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                    const row = document.createElement('div');
-                    row.className = 'log-entry';
-                    row.innerHTML = `<div style="flex:1;"><strong>${date}</strong><br><small>Firmado por ${l.verifiedBy}</small></div><img src="${l.signature}" class="log-signature">`;
-                    logContainer.appendChild(row);
-                });
-            } catch (e) { logContainer.innerHTML = 'Error al cargar.'; }
+        function handleRegisterClick() {
+            const now = new Date();
+            // Solo permitir registrar en el mes en el que estamos visualizando para evitar errores
+            if (now.getMonth() !== currentViewDate.getMonth() || now.getFullYear() !== currentViewDate.getFullYear()) {
+                if (!confirm("Estás registrando una limpieza fuera del mes actual. ¿Deseas continuar?")) return;
+            }
+            openSignatureModal();
         }
 
         async function generateInvoicePDF() {
