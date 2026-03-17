@@ -122,7 +122,10 @@
     // Redirigir si ya hay token válido
     if (localStorage.getItem('token')) {
       const role = localStorage.getItem('userRole');
-      if (role === 'cristalero') {
+      if (!role) {
+        // Sesión antigua sin rol, forzar relogin
+        localStorage.clear();
+      } else if (role === 'cristalero') {
         window.location.href = 'mi-ruta.html';
       } else {
         window.location.href = 'contacts.html';
