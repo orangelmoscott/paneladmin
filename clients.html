@@ -605,7 +605,7 @@
             lucide.createIcons();
 
             try {
-                const response = await fetch(`${API_URL}/clients/${selectedClient._id}/invoice-email`, {
+                const response = await fetch(`${API}/clients/${selectedClient._id}/invoice-email`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
