@@ -270,14 +270,18 @@
                         </p>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem;">
                         <button id="btn-register-cleaning" onclick="handleRegisterClick()" class="btn-primary"
-                            style="background: var(--color-success); padding: 1.2rem;">
-                            <i data-lucide="pen-tool"></i> Registrar Limpieza Realizada
+                            style="background: var(--color-success); padding: 1.2rem; font-size: 0.95rem;">
+                            <i data-lucide="pen-tool"></i> Registrar Limpieza
                         </button>
                         <button id="btn-generate-invoice" onclick="generateInvoicePDF()" class="btn-primary"
-                            style="background: var(--color-secondary); padding: 1.2rem;">
-                            <i data-lucide="download"></i> Generar Factura PDF
+                            style="background: var(--color-secondary); padding: 1.2rem; font-size: 0.95rem;">
+                            <i data-lucide="download"></i> Factura PDF
+                        </button>
+                        <button id="btn-send-email" onclick="sendInvoiceEmail()" class="btn-primary"
+                            style="background: #4f46e5; padding: 1.2rem; font-size: 0.95rem;">
+                            <i data-lucide="mail"></i> Enviar por Email
                         </button>
                     </div>
 
@@ -583,6 +587,46 @@
             doc.text(`${total.toFixed(2)} €`, 190, finalY, { align: 'right' });
 
             doc.save(`Factura_ORM_${selectedClient.companyName.replace(/\s/g, '_')}.pdf`);
+        }
+
+        async function sendInvoiceEmail() {
+            if (!selectedClient) return;
+            if (!selectedClient.email) {
+                alert("Este cliente no tiene un email registrado para facturación.");
+                return;
+            }
+
+            if (!confirm(`¿Deseas enviar el resumen de facturación mensual a ${selectedClient.email}?`)) return;
+
+            const btn = document.getElementById('btn-send-email');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Enviando...';
+            btn.disabled = true;
+            lucide.createIcons();
+
+            try {
+                const response = await fetch(`${API_URL}/clients/${selectedClient._id}/invoice-email`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('token')
+                    }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("✅ " + data.message);
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("❌ Error al conectar con el servidor para el envío.");
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
         }
 
         function openSignatureModal() {
