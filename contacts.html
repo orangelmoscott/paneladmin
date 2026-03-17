@@ -51,6 +51,9 @@
         <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
         <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
       </div>
+      <a href="routes.html" class="nav-link">
+        <i data-lucide="map-pin"></i> Rutas
+      </a>
       <a href="clients.html" class="nav-link">
         <i data-lucide="briefcase"></i> Clientes
       </a>
@@ -98,7 +101,7 @@
     const API = 'https://serverormcristales.onrender.com';
     lucide.createIcons();
 
-    function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
+    function logout() { localStorage.clear(); window.location.href = 'index.html'; }
     document.getElementById('nav-user').textContent = localStorage.getItem('adminUser') || 'Admin';
 
     async function fetchContacts() {
@@ -160,8 +163,11 @@
       fetchContacts();
     }
 
-    if (!localStorage.getItem('token')) window.location.href = 'index.html';
-    else fetchContacts();
+    if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'admin') {
+        window.location.href = 'index.html';
+    } else {
+        fetchContacts();
+    }
   </script>
 </body>
 

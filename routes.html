@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestión de Rutas - ORM Cristales</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="admin-style.css">
+    <style>
+        .routes-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .assign-panel {
+            position: sticky;
+            top: 80px;
+        }
+
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        .date-nav button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-primary);
+            padding: 0.4rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .date-nav button:hover {
+            background: #f0f9ff;
+        }
+
+        .date-display {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--color-secondary);
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .cristalero-section {
+            margin-bottom: 2rem;
+            border: 2px solid #f1f5f9;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .cristalero-section:hover {
+            border-color: #e2e8f0;
+        }
+
+        .cristalero-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            background: #fafafa;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .cristalero-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .cristalero-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .assignment-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f8fafc;
+            transition: background 0.2s;
+        }
+
+        .assignment-item:last-child {
+            border-bottom: none;
+        }
+
+        .assignment-item:hover {
+            background: #fafafa;
+        }
+
+        .assignment-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-pendiente {
+            background: #fbbf24;
+        }
+
+        .status-en_ruta {
+            background: #3b82f6;
+            animation: pulse-dot 2s infinite;
+        }
+
+        .status-completado {
+            background: #10b981;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--color-secondary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-top: 0.35rem;
+        }
+
+        .empty-assignments {
+            padding: 2rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .select-styled {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            appearance: none;
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 1rem center;
+            transition: all 0.2s;
+        }
+
+        .select-styled:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .client-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1.5px solid #f1f5f9;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .client-checkbox:hover {
+            border-color: var(--color-primary);
+            background: #f0f9ff;
+        }
+
+        .client-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--color-primary);
+        }
+
+        .client-checkbox-info {
+            flex: 1;
+        }
+
+        .client-checkbox-info strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .client-checkbox-info small {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        .assign-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .assign-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .assign-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 1024px) {
+            .routes-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .assign-panel {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="dashboard-navbar">
+        <div class="brand">ORM<span>Cristales</span></div>
+        <div class="nav-links">
+            <div
+                style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;">
+                <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
+                <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
+            </div>
+            <a href="clients.html" class="nav-link">
+                <i data-lucide="briefcase"></i> Clientes
+            </a>
+            <a href="contacts.html" class="nav-link">
+                <i data-lucide="inbox"></i> Solicitudes
+            </a>
+            <a href="users.html" class="nav-link">
+                <i data-lucide="users"></i> Equipo
+            </a>
+            <button onclick="logout()" class="btn-danger">
+                <i data-lucide="log-out"></i> Salir
+            </button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header" style="margin-bottom: 1rem;">
+            <div>
+                <h1 style="font-size: 2.2rem; letter-spacing: -0.02em;">Rutas del Día</h1>
+                <p style="color: #64748b;">Asigna clientes a tus cristaleros para cada jornada.</p>
+            </div>
+        </div>
+
+        <!-- Navegación de fecha -->
+        <div class="date-nav">
+            <button onclick="changeDate(-1)"><i data-lucide="chevron-left"></i></button>
+            <span id="date-display" class="date-display"></span>
+            <button onclick="changeDate(1)"><i data-lucide="chevron-right"></i></button>
+            <button onclick="goToday()" style="font-size:0.8rem; font-weight:700; color:#0ea5e9;">HOY</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat-card">
+                <div class="stat-number" id="stat-total">0</div>
+                <div class="stat-label">Asignaciones</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-completed" style="color:#10b981;">0</div>
+                <div class="stat-label">Completadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-pending" style="color:#fbbf24;">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-workers" style="color:#0ea5e9;">0</div>
+                <div class="stat-label">Cristaleros</div>
+            </div>
+        </div>
+
+        <div class="routes-layout">
+            <!-- Panel de asignación -->
+            <div class="assign-panel">
+                <div class="glass-card">
+                    <h3 style="margin-bottom:1.5rem;"><i data-lucide="plus-circle"
+                            style="vertical-align:middle; margin-right:8px; color:var(--color-primary);"></i>Nueva
+                        Asignación</h3>
+
+                    <div class="form-group">
+                        <label>Cristalero</label>
+                        <select id="select-cristalero" class="select-styled">
+                            <option value="">Selecciona un cristalero...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Clientes a asignar</label>
+                        <div id="clients-checkboxes" class="assign-list">
+                            <div class="empty-state"><i data-lucide="loader" class="spin"
+                                    style="width:20px;height:20px;"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notas (opcional)</label>
+                        <input type="text" id="assign-notes" placeholder="Instrucciones especiales..."
+                            style="width:100%; padding:0.75rem 1rem; border:1.5px solid #e2e8f0; border-radius:10px; font-family:inherit;">
+                    </div>
+
+                    <button onclick="createAssignment()" class="btn-primary" id="btn-assign"
+                        style="width:100%; margin-top:0.5rem;">
+                        <i data-lucide="send"></i> Asignar Ruta
+                    </button>
+                    <div id="assign-feedback"
+                        style="margin-top:1rem; padding:0.75rem; border-radius:10px; display:none; text-align:center; font-weight:600; font-size:0.85rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de rutas del día -->
+            <div>
+                <div id="routes-container">
+                    <div class="empty-state" style="padding:4rem 2rem;">
+                        <div
+                            style="background:#f0f9ff; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                            <i data-lucide="map" style="width:36px; height:36px; color:var(--color-primary);"></i>
+                        </div>
+                        <h2 style="color:#64748b;">Cargando rutas...</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://serverormcristales.onrender.com';
+        let currentDate = new Date();
+        let cristaleros = [];
+        let clients = [];
+
+        lucide.createIcons();
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        document.getElementById('nav-user').textContent = localStorage.getItem('adminUser') || 'Admin';
+
+        // Navegación de fecha
+        function formatDate(d) {
+            return d.toISOString().split('T')[0];
+        }
+
+        function displayDate(d) {
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            return `${days[d.getDay()]} ${d.getDate()} de ${months[d.getMonth()]}`;
+        }
+
+        function changeDate(offset) {
+            currentDate.setDate(currentDate.getDate() + offset);
+            updateView();
+        }
+
+        function goToday() {
+            currentDate = new Date();
+            updateView();
+        }
+
+        function updateView() {
+            document.getElementById('date-display').textContent = displayDate(currentDate);
+            fetchAssignments();
+        }
+
+        // Cargar datos iniciales
+        async function init() {
+            const token = localStorage.getItem('token');
+
+            // Cargar cristaleros
+            try {
+                const res = await fetch(`${API}/users/cristaleros`, { headers: { 'Authorization': token } });
+                cristaleros = await res.json();
+                const select = document.getElementById('select-cristalero');
+                select.innerHTML = '<option value="">Selecciona un cristalero...</option>';
+                cristaleros.forEach(c => {
+                    select.innerHTML += `<option value="${c._id}">${c.fullName || c.username}</option>`;
+                });
+            } catch (e) { console.error('Error cargando cristaleros:', e); }
+
+            // Cargar clientes
+            try {
+                const res = await fetch(`${API}/clients`, { headers: { 'Authorization': token } });
+                clients = await res.json();
+                renderClientCheckboxes();
+            } catch (e) { console.error('Error cargando clientes:', e); }
+
+            updateView();
+        }
+
+        function renderClientCheckboxes() {
+            const container = document.getElementById('clients-checkboxes');
+            if (clients.length === 0) {
+                container.innerHTML = '<p class="empty-assignments">No hay clientes registrados.</p>';
+                return;
+            }
+            container.innerHTML = '';
+            clients.forEach(c => {
+                const label = document.createElement('label');
+                label.className = 'client-checkbox';
+                label.innerHTML = `
+                    <input type="checkbox" value="${c._id}">
+                    <div class="client-checkbox-info">
+                        <strong>${c.companyName}</strong>
+                        <small>${c.address || 'Sin dirección'}</small>
+                    </div>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        // Crear asignación
+        async function createAssignment() {
+            const userId = document.getElementById('select-cristalero').value;
+            const notes = document.getElementById('assign-notes').value;
+            const feedback = document.getElementById('assign-feedback');
+            const checkboxes = document.querySelectorAll('#clients-checkboxes input[type="checkbox"]:checked');
+            const clientIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (!userId) { showFeedback('Selecciona un cristalero.', 'error'); return; }
+            if (clientIds.length === 0) { showFeedback('Selecciona al menos un cliente.', 'error'); return; }
+
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`${API}/assignments/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                    body: JSON.stringify({ userId, clientIds, date: formatDate(currentDate), notes })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showFeedback(`✅ ${data.message}`, 'success');
+                    // Reset checkboxes
+                    checkboxes.forEach(cb => cb.checked = false);
+                    document.getElementById('assign-notes').value = '';
+                    fetchAssignments();
+                } else {
+                    showFeedback(`❌ ${data.message}`, 'error');
+                }
+            } catch (e) {
+                showFeedback('❌ Error de conexión.', 'error');
+            }
+        }
+
+        function showFeedback(text, type) {
+            const el = document.getElementById('assign-feedback');
+            el.textContent = text;
+            el.style.display = 'block';
+            el.style.background = type === 'success' ? '#dcfce7' : '#fee2e2';
+            el.style.color = type === 'success' ? '#166534' : '#b91c1c';
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
+        }
+
+        // Cargar asignaciones del día
+        async function fetchAssignments() {
+            const token = localStorage.getItem('token');
+            const container = document.getElementById('routes-container');
+
+            try {
+                const res = await fetch(`${API}/assignments?date=${formatDate(currentDate)}`, {
+                    headers: { 'Authorization': token }
+                });
+                const assignments = await res.json();
+
+                // Stats
+                const total = assignments.length;
+                const completed = assignments.filter(a => a.status === 'completado').length;
+                const pending = assignments.filter(a => a.status === 'pendiente').length;
+                const workers = new Set(assignments.map(a => a.userId?._id)).size;
+
+                document.getElementById('stat-total').textContent = total;
+                document.getElementById('stat-completed').textContent = completed;
+                document.getElementById('stat-pending').textContent = pending;
+                document.getElementById('stat-workers').textContent = workers;
+
+                if (assignments.length === 0) {
+                    container.innerHTML = `
+                        <div class="glass-card" style="text-align:center; padding:4rem 2rem;">
+                            <div style="background:#f0f9ff;width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+                                <i data-lucide="calendar-x" style="width:36px;height:36px;color:var(--color-primary);"></i>
+                            </div>
+                            <h2 style="color:#64748b;margin-bottom:0.5rem;">Sin rutas para este día</h2>
+                            <p style="color:#94a3b8;">Usa el panel de la izquierda para asignar clientes.</p>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                // Agrupar por cristalero
+                const grouped = {};
+                assignments.forEach(a => {
+                    const key = a.userId?._id || 'unknown';
+                    if (!grouped[key]) {
+                        grouped[key] = {
+                            user: a.userId,
+                            assignments: []
+                        };
+                    }
+                    grouped[key].assignments.push(a);
+                });
+
+                container.innerHTML = '';
+                Object.values(grouped).forEach(group => {
+                    const userInitial = (group.user?.fullName || group.user?.username || '?')[0].toUpperCase();
+                    const userName = group.user?.fullName || group.user?.username || 'Desconocido';
+                    const total = group.assignments.length;
+                    const done = group.assignments.filter(a => a.status === 'completado').length;
+
+                    const section = document.createElement('div');
+                    section.className = 'cristalero-section';
+                    section.innerHTML = `
+                        <div class="cristalero-header">
+                            <div class="cristalero-name">
+                                <div class="cristalero-avatar">${userInitial}</div>
+                                <div>
+                                    <strong>${userName}</strong>
+                                    <div style="font-size:0.8rem;color:#94a3b8;">${done}/${total} completados</div>
+                                </div>
+                            </div>
+                            <span class="role-badge ${done === total && total > 0 ? 'role-admin' : 'role-cristalero'}" style="background:${done === total && total > 0 ? '#dcfce7' : '#fef3c7'};color:${done === total && total > 0 ? '#166534' : '#92400e'}">
+                                ${done === total && total > 0 ? '✅ Completado' : '⏳ En progreso'}
+                            </span>
+                        </div>
+                    `;
+
+                    group.assignments.forEach(a => {
+                        const client = a.clientId || {};
+                        const statusColors = {
+                            'pendiente': '#fbbf24',
+                            'en_ruta': '#3b82f6',
+                            'completado': '#10b981'
+                        };
+                        const statusLabels = {
+                            'pendiente': '🟡 Pendiente',
+                            'en_ruta': '🔵 En ruta',
+                            'completado': '🟢 Completado'
+                        };
+
+                        const item = document.createElement('div');
+                        item.className = 'assignment-item';
+                        item.innerHTML = `
+                            <div class="assignment-status" style="background:${statusColors[a.status]}"></div>
+                            <div style="flex:1;min-width:0;">
+                                <strong>${client.companyName || 'Cliente eliminado'}</strong>
+                                <div style="font-size:0.8rem;color:#94a3b8;">${client.address || ''}</div>
+                                ${a.notes ? `<div style="font-size:0.75rem;color:#0ea5e9;margin-top:0.25rem;">📝 ${a.notes}</div>` : ''}
+                            </div>
+                            <span style="font-size:0.75rem;font-weight:700;white-space:nowrap;">${statusLabels[a.status]}</span>
+                            <button onclick="deleteAssignment('${a._id}')" class="btn-delete" style="width:30px;height:30px;" title="Eliminar">
+                                <i data-lucide="x" style="width:14px;height:14px;"></i>
+                            </button>
+                        `;
+                        section.appendChild(item);
+                    });
+
+                    container.appendChild(section);
+                });
+
+                lucide.createIcons();
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><p>Error al cargar rutas.</p></div>';
+            }
+        }
+
+        async function deleteAssignment(id) {
+            if (!confirm('¿Eliminar esta asignación?')) return;
+            const token = localStorage.getItem('token');
+            await fetch(`${API}/assignments/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': token }
+            });
+            fetchAssignments();
+        }
+
+        // Guard
+        if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = 'index.html';
+        } else {
+            init();
+        }
+    </script>
+</body>
+
+</html>

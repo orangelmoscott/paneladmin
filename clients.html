@@ -152,6 +152,9 @@
                 <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
                 <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
             </div>
+            <a href="routes.html" class="nav-link">
+                <i data-lucide="map-pin"></i> Rutas
+            </a>
             <a href="contacts.html" class="nav-link">
                 <i data-lucide="inbox"></i> Solicitudes
             </a>
@@ -363,7 +366,7 @@
         const API = 'https://serverormcristales.onrender.com';
         let signaturePad, clients = [], selectedClient = null;
 
-        function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
         // Perfil nombre
         const userEl = document.getElementById('nav-user');
@@ -690,8 +693,11 @@
             }
         };
 
-        if (!localStorage.getItem('token')) window.location.href = 'index.html';
-        else fetchClients();
+        if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = 'index.html';
+        } else {
+            fetchClients();
+        }
     </script>
 </body>
 

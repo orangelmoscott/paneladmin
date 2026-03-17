@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi Ruta del Día - ORM Cristales</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <link rel="stylesheet" href="admin-style.css">
+    <style>
+        body {
+            background: #f8fafc;
+        }
+
+        .worker-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .worker-greeting {
+            text-align: center;
+            padding: 2.5rem 1.5rem 1.5rem;
+        }
+
+        .worker-greeting h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .worker-greeting .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.5rem 1.25rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+        }
+
+        .progress-summary {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 0 1.5rem 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .progress-item {
+            text-align: center;
+        }
+
+        .progress-item .number {
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .progress-item .label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .route-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 1rem 3rem;
+        }
+
+        .route-card {
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #f1f5f9;
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .route-card.completed {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+        }
+
+        .route-card.en_ruta {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+        }
+
+        .route-card-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .route-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .route-card.completed .route-number {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .route-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .route-card-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .route-card-info .address {
+            color: #64748b;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .route-card-notes {
+            padding: 0 1.5rem;
+            margin-top: -0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .route-card-notes span {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .route-card-actions {
+            padding: 0.75rem 1.5rem 1.25rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-maps {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            background: #f0f9ff;
+            color: #0369a1;
+            border: 1.5px solid #bae6fd;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-maps:hover {
+            background: #e0f2fe;
+        }
+
+        .btn-call {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            background: #f0fdf4;
+            color: #166534;
+            border: 1.5px solid #bbf7d0;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-complete {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-complete:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-complete:disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .completed-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem;
+            color: #166534;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .no-route {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .no-route-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f0f9ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar simplificada para cristaleros -->
+    <nav class="worker-navbar">
+        <div class="brand">ORM<span>Cristales</span></div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div
+                style="display:flex;align-items:center;gap:0.4rem;background:rgba(14,165,233,0.1);padding:0.3rem 0.8rem;border-radius:999px;">
+                <i data-lucide="hard-hat" style="color:#0ea5e9;width:16px;"></i>
+                <span id="worker-name" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;"></span>
+            </div>
+            <button onclick="logout()" class="btn-danger" style="padding:0.4rem 0.8rem;font-size:0.8rem;">
+                <i data-lucide="log-out" style="width:14px;height:14px;"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Saludo y fecha -->
+    <div class="worker-greeting">
+        <h1 id="greeting">Buenos días</h1>
+        <p style="color:#64748b;">Tu ruta de trabajo para hoy</p>
+        <div class="date-badge">
+            <i data-lucide="calendar" style="width:16px;height:16px;"></i>
+            <span id="today-date"></span>
+        </div>
+    </div>
+
+    <!-- Progreso -->
+    <div class="progress-summary">
+        <div class="progress-item">
+            <div class="number" id="total-count" style="color:var(--color-secondary);">0</div>
+            <div class="label">Total</div>
+        </div>
+        <div class="progress-item">
+            <div class="number" id="done-count" style="color:#10b981;">0</div>
+            <div class="label">Hechos</div>
+        </div>
+        <div class="progress-item">
+            <div class="number" id="pending-count" style="color:#fbbf24;">0</div>
+            <div class="label">Pendientes</div>
+        </div>
+    </div>
+
+    <!-- Lista de clientes asignados -->
+    <div class="route-container" id="route-container">
+        <div class="empty-state"><i data-lucide="loader" class="spin"></i></div>
+    </div>
+
+    <!-- MODAL: Firma táctil -->
+    <div id="modal-signature" class="modal-overlay">
+        <div class="modal-content">
+            <button class="btn-close-modal" onclick="closeModal()"><i data-lucide="x"></i></button>
+            <h2 style="text-align: center; margin-bottom: 0.5rem;">✅ Confirmar Limpieza</h2>
+            <p id="sig-client-name"
+                style="text-align: center; color: var(--color-primary); font-weight: 800; font-size: 1.2rem; margin-bottom: 1.5rem;">
+            </p>
+
+            <div class="form-group">
+                <label>Nombre del firmante (encargado o cliente)</label>
+                <input type="text" id="verifiedBy" required placeholder="¿Quién firma la conformidad?">
+            </div>
+
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 700;">Firma aquí abajo</label>
+            <div class="signature-wrapper">
+                <canvas id="signature-pad"></canvas>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" onclick="clearSignature()" class="btn-danger"
+                    style="flex: 1; background: #f8fafc; color: #64748b;">Borrar</button>
+                <button type="button" onclick="submitCompletion()" class="btn-complete" id="btn-submit-sig"
+                    style="flex: 2;">
+                    <i data-lucide="check-circle"></i> Verificar y Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://serverormcristales.onrender.com';
+        let signaturePad;
+        let currentAssignment = null;
+        let assignments = [];
+
+        lucide.createIcons();
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        // Saludo según hora
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? '¡Buenos días' : hour < 20 ? '¡Buenas tardes' : '¡Buenas noches';
+        const fullName = localStorage.getItem('userFullName') || localStorage.getItem('adminUser') || 'Compañero';
+        document.getElementById('greeting').textContent = `${greeting}, ${fullName}!`;
+        document.getElementById('worker-name').textContent = fullName;
+
+        // Fecha de hoy
+        const today = new Date();
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        document.getElementById('today-date').textContent = `${days[today.getDay()]} ${today.getDate()} de ${months[today.getMonth()]}`;
+
+        async function fetchMyRoute() {
+            const token = localStorage.getItem('token');
+            const container = document.getElementById('route-container');
+            const dateStr = today.toISOString().split('T')[0];
+
+            try {
+                const res = await fetch(`${API}/my-assignments?date=${dateStr}`, {
+                    headers: { 'Authorization': token }
+                });
+
+                if (res.status === 401) {
+                    window.location.href = 'index.html?session=expired';
+                    return;
+                }
+
+                assignments = await res.json();
+
+                const total = assignments.length;
+                const done = assignments.filter(a => a.status === 'completado').length;
+                document.getElementById('total-count').textContent = total;
+                document.getElementById('done-count').textContent = done;
+                document.getElementById('pending-count').textContent = total - done;
+
+                if (total === 0) {
+                    container.innerHTML = `
+                        <div class="no-route">
+                            <div class="no-route-icon">
+                                <i data-lucide="coffee" style="width:45px;height:45px;color:var(--color-primary);"></i>
+                            </div>
+                            <h2 style="color:#64748b;margin-bottom:0.5rem;">Sin asignaciones hoy</h2>
+                            <p style="color:#94a3b8;max-width:300px;margin:0 auto;">No tienes clientes asignados para hoy. Consulta con tu administrador.</p>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = '';
+                assignments.forEach((a, index) => {
+                    const client = a.clientId || {};
+                    const isCompleted = a.status === 'completado';
+                    const isEnRuta = a.status === 'en_ruta';
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(client.address || '')}`;
+
+                    const card = document.createElement('div');
+                    card.className = `route-card ${isCompleted ? 'completed' : isEnRuta ? 'en_ruta' : ''}`;
+                    card.innerHTML = `
+                        <div class="route-card-header">
+                            <div class="route-number">${isCompleted ? '✓' : index + 1}</div>
+                            <div class="route-card-info">
+                                <h3>${client.companyName || 'Cliente'}</h3>
+                                <div class="address">
+                                    <i data-lucide="map-pin" style="width:14px;height:14px;flex-shrink:0;"></i>
+                                    ${client.address || 'Sin dirección'}
+                                </div>
+                                ${client.encargado ? `<div style="font-size:0.8rem;color:#94a3b8;margin-top:0.25rem;">Contacto: ${client.encargado}</div>` : ''}
+                            </div>
+                        </div>
+                        ${a.notes ? `<div class="route-card-notes"><span>📝 ${a.notes}</span></div>` : ''}
+                        <div class="route-card-actions">
+                            <a href="${mapsUrl}" target="_blank" class="btn-maps">
+                                <i data-lucide="navigation" style="width:14px;height:14px;"></i> Maps
+                            </a>
+                            ${client.phone ? `<a href="tel:${client.phone}" class="btn-call"><i data-lucide="phone" style="width:14px;height:14px;"></i> Llamar</a>` : ''}
+                            ${isCompleted
+                            ? `<div class="completed-badge"><i data-lucide="check-circle" style="width:18px;height:18px;color:#10b981;"></i> Completado</div>`
+                            : `<button class="btn-complete" onclick="openSignature('${a._id}', '${(client.companyName || '').replace(/'/g, "\\'")}', '${client._id}')">
+                                    <i data-lucide="pen-tool" style="width:16px;height:16px;"></i> Firmar
+                                </button>`
+                        }
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                lucide.createIcons();
+            } catch (e) {
+                container.innerHTML = `<div class="no-route"><h2 style="color:#64748b;">Error de conexión</h2><p style="color:#94a3b8;">Comprueba tu conexión a internet.</p></div>`;
+            }
+        }
+
+        // Firma
+        function openSignature(assignmentId, clientName, clientId) {
+            currentAssignment = { assignmentId, clientName, clientId };
+            document.getElementById('sig-client-name').textContent = clientName;
+            document.getElementById('modal-signature').style.display = 'flex';
+            document.getElementById('verifiedBy').value = '';
+            lucide.createIcons();
+            setTimeout(initSignaturePad, 100);
+        }
+
+        function closeModal() {
+            document.getElementById('modal-signature').style.display = 'none';
+            currentAssignment = null;
+        }
+
+        function initSignaturePad() {
+            const canvas = document.getElementById('signature-pad');
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            if (!signaturePad) signaturePad = new SignaturePad(canvas);
+            else signaturePad.clear();
+        }
+
+        function clearSignature() {
+            if (signaturePad) signaturePad.clear();
+        }
+
+        async function submitCompletion() {
+            if (!currentAssignment) return;
+            if (signaturePad.isEmpty()) return alert('Se requiere la firma del cliente o encargado.');
+            const verifiedBy = document.getElementById('verifiedBy').value;
+            if (!verifiedBy) return alert('Indica el nombre de quien firma.');
+
+            const btn = document.getElementById('btn-submit-sig');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:16px;height:16px;"></i> Guardando...';
+            lucide.createIcons();
+
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`${API}/services/log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                    body: JSON.stringify({
+                        clientId: currentAssignment.clientId,
+                        assignmentId: currentAssignment.assignmentId,
+                        signature: signaturePad.toDataURL(),
+                        verifiedBy
+                    })
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    fetchMyRoute(); // Recargar
+                } else {
+                    const err = await res.json();
+                    alert(err.message || 'Error al registrar.');
+                }
+            } catch (e) {
+                alert('Error de conexión.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="check-circle"></i> Verificar y Guardar';
+                lucide.createIcons();
+            }
+        }
+
+        // Guard: solo usuarios autenticados
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'index.html';
+        } else {
+            fetchMyRoute();
+        }
+    </script>
+</body>
+
+</html>

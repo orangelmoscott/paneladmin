@@ -26,11 +26,91 @@
             }
         }
 
-        .info-item {
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .role-admin {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .role-cristalero {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .user-card {
             display: flex;
-            gap: 1rem;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            border: 1.5px solid #f1f5f9;
+            border-radius: 14px;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .user-card:hover {
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-avatar.admin {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        }
+
+        .user-avatar.cristalero {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-info strong {
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+
+        .user-info small {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
         }
     </style>
 </head>
@@ -45,6 +125,9 @@
                 <i data-lucide="user" style="color:#0ea5e9;width:16px;"></i>
                 <span id="nav-user" style="font-weight:600;font-size:0.8rem;color:#0ea5e9;">Admin</span>
             </div>
+            <a href="routes.html" class="nav-link">
+                <i data-lucide="map-pin"></i> Rutas
+            </a>
             <a href="clients.html" class="nav-link">
                 <i data-lucide="briefcase"></i> Clientes
             </a>
@@ -61,7 +144,7 @@
         <div class="dashboard-header">
             <div>
                 <h1>Gestión de Equipo</h1>
-                <p style="color: #64748b;">Administra los accesos de tus colaboradores.</p>
+                <p style="color: #64748b;">Crea administradores y cristaleros para tu empresa.</p>
             </div>
         </div>
 
@@ -69,70 +152,90 @@
             <!-- Formulario de creación -->
             <div class="glass-card">
                 <h3 style="margin-bottom: 1.5rem;"><i data-lucide="user-plus"
-                        style="vertical-align:middle; margin-right:8px;"></i>Añadir Compañero</h3>
+                        style="vertical-align:middle; margin-right:8px;"></i>Nuevo Miembro</h3>
                 <form id="create-user-form">
                     <div class="form-group">
-                        <label>Nombre de Usuario</label>
-                        <input type="text" id="new-username" required placeholder="ej. juan_limpieza">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="new-fullname" required placeholder="Ej. Juan Pérez García">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Usuario de Acceso</label>
+                            <input type="text" id="new-username" required placeholder="ej. juan_limpieza">
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" id="new-phone" placeholder="666 123 456">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label>Contraseña</label>
-                        <input type="password" id="new-password" required placeholder="Mínimo 8 caracteres">
+                        <label>Rol</label>
+                        <select id="new-role">
+                            <option value="cristalero">🪟 Cristalero (solo ve su ruta)</option>
+                            <option value="admin">👑 Administrador (acceso total)</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>Confirmar Contraseña</label>
-                        <input type="password" id="confirm-password" required>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" id="new-password" required placeholder="Mínimo 6 caracteres">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Contraseña</label>
+                            <input type="password" id="confirm-password" required>
+                        </div>
                     </div>
-                    <button type="submit" class="btn-primary" id="create-btn">Registrar Usuario</button>
-                    <div id="status-msg" style="margin-top:1rem; padding:1rem; border-radius:10px; display:none;"></div>
+                    <button type="submit" class="btn-primary" id="create-btn" style="width:100%;">
+                        <i data-lucide="user-plus"></i> Registrar Miembro
+                    </button>
+                    <div id="status-msg"
+                        style="margin-top:1rem; padding:1rem; border-radius:10px; display:none; text-align:center; font-weight:600;">
+                    </div>
                 </form>
             </div>
 
-            <!-- Seguridad / Info -->
+            <!-- Info de roles -->
             <div class="glass-card">
                 <h3 style="margin-bottom: 1.5rem;"><i data-lucide="shield"
-                        style="vertical-align:middle; margin-right:8px;"></i>Seguridad y Accesos</h3>
-                <div class="info-item">
-                    <i data-lucide="lock" style="color:var(--color-primary)"></i>
-                    <div>
-                        <strong>Control Centralizado</strong>
-                        <p style="color:#64748b; font-size:0.9rem;">Solo los administradores pueden crear nuevos
-                            usuarios para acceder al panel.</p>
+                        style="vertical-align:middle; margin-right:8px;"></i>Roles y Permisos</h3>
+
+                <div style="padding:1.25rem; background:#ede9fe; border-radius:14px; margin-bottom:1.25rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                        <span class="role-badge role-admin">👑 Admin</span>
+                        <strong>Administrador</strong>
                     </div>
+                    <ul style="color:#64748b; font-size:0.85rem; padding-left:1.25rem; list-style:disc;">
+                        <li>Acceso total a clientes y solicitudes</li>
+                        <li>Crear y asignar rutas diarias</li>
+                        <li>Gestionar equipo de trabajo</li>
+                        <li>Ver historial y generar facturas</li>
+                    </ul>
                 </div>
-                <div class="info-item">
-                    <i data-lucide="eye" style="color:var(--color-primary)"></i>
-                    <div>
-                        <strong>Visibilidad de Datos</strong>
-                        <p style="color:#64748b; font-size:0.9rem;">Los nuevos usuarios podrán ver y registrar limpiezas
-                            de clientes.</p>
+
+                <div style="padding:1.25rem; background:#e0f2fe; border-radius:14px;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                        <span class="role-badge role-cristalero">🪟 Cristalero</span>
+                        <strong>Empleado</strong>
                     </div>
+                    <ul style="color:#64748b; font-size:0.85rem; padding-left:1.25rem; list-style:disc;">
+                        <li>Solo ve los clientes asignados para el día</li>
+                        <li>Registra limpiezas con firma del cliente</li>
+                        <li>No puede ver otros clientes ni solicitudes</li>
+                        <li>No puede modificar datos del sistema</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Tabla de usuarios -->
+        <!-- Lista de usuarios -->
         <div class="glass-card" style="margin-top: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3>Usuarios Activos</h3>
+                <h3>Equipo Completo</h3>
                 <button onclick="fetchUsers()" class="btn-primary" style="padding: 0.5rem 1rem;"><i
                         data-lucide="refresh-cw"></i></button>
             </div>
-            <div class="table-wrapper">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>ID de Registro</th>
-                            <th style="text-align: right;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-body">
-                        <tr>
-                            <td colspan="3" style="text-align:center;">Cargando equipo...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div id="users-list">
+                <div class="empty-state"><i data-lucide="loader" class="spin"></i></div>
             </div>
         </div>
     </div>
@@ -141,36 +244,57 @@
         const API = 'https://serverormcristales.onrender.com';
         lucide.createIcons();
 
-        function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
-
-        // Perfil nombre
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         document.getElementById('nav-user').textContent = localStorage.getItem('adminUser') || 'Admin';
 
         async function fetchUsers() {
             const token = localStorage.getItem('token');
-            const tbody = document.getElementById('users-body');
+            const container = document.getElementById('users-list');
             try {
                 const res = await fetch(`${API}/users`, { headers: { 'Authorization': token } });
-                if (!res.ok) throw new Error();
+                if (res.status === 401 || res.status === 403) {
+                    window.location.href = 'index.html?session=expired';
+                    return;
+                }
                 const users = await res.json();
-                tbody.innerHTML = '';
+                container.innerHTML = '';
+
+                if (users.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><h3>Sin usuarios</h3></div>';
+                    return;
+                }
+
                 users.forEach(u => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td data-label="Usuario"><strong>${u.username}</strong></td>
-                        <td data-label="ID de Registro" style="font-family:monospace; font-size:0.8rem; color:#94a3b8;">${u._id}</td>
-                        <td data-label="Acciones" style="text-align: right;">
-                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="btn-delete"><i data-lucide="user-minus"></i></button>
-                        </td>
+                    const initial = (u.fullName || u.username).charAt(0).toUpperCase();
+                    const roleBadge = u.role === 'admin'
+                        ? '<span class="role-badge role-admin">👑 Admin</span>'
+                        : '<span class="role-badge role-cristalero">🪟 Cristalero</span>';
+
+                    const div = document.createElement('div');
+                    div.className = 'user-card';
+                    div.innerHTML = `
+                        <div class="user-avatar ${u.role}">${initial}</div>
+                        <div class="user-info">
+                            <strong>${u.fullName || u.username}</strong>
+                            <small>@${u.username} ${u.phone ? '· ' + u.phone : ''}</small>
+                            <div style="margin-top:0.4rem;">${roleBadge}</div>
+                        </div>
+                        <div class="user-actions">
+                            <button onclick="deleteUser('${u._id}', '${u.fullName || u.username}')" class="btn-delete" title="Eliminar">
+                                <i data-lucide="user-minus"></i>
+                            </button>
+                        </div>
                     `;
-                    tbody.appendChild(tr);
+                    container.appendChild(div);
                 });
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="3">Error al cargar usuarios.</td></tr>'; }
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><p>Error al cargar el equipo.</p></div>';
+            }
             lucide.createIcons();
         }
 
         async function deleteUser(id, name) {
-            if (!confirm(`¿Eliminar al usuario ${name}?`)) return;
+            if (!confirm(`¿Eliminar al miembro "${name}"? Esta acción no se puede deshacer.`)) return;
             const token = localStorage.getItem('token');
             const res = await fetch(`${API}/users/${id}`, { method: 'DELETE', headers: { 'Authorization': token } });
             if (res.ok) fetchUsers();
@@ -178,15 +302,27 @@
 
         document.getElementById('create-user-form').onsubmit = async (e) => {
             e.preventDefault();
+            const fullName = document.getElementById('new-fullname').value;
             const username = document.getElementById('new-username').value;
+            const phone = document.getElementById('new-phone').value;
+            const role = document.getElementById('new-role').value;
             const password = document.getElementById('new-password').value;
             const confirm = document.getElementById('confirm-password').value;
             const msg = document.getElementById('status-msg');
 
             if (password !== confirm) {
-                msg.textContent = 'Las contraseñas no coinciden.';
+                msg.textContent = '❌ Las contraseñas no coinciden.';
                 msg.style.display = 'block';
-                msg.className = 'badge-warning';
+                msg.style.background = '#fee2e2';
+                msg.style.color = '#b91c1c';
+                return;
+            }
+
+            if (password.length < 6) {
+                msg.textContent = '❌ La contraseña debe tener al menos 6 caracteres.';
+                msg.style.display = 'block';
+                msg.style.background = '#fee2e2';
+                msg.style.color = '#b91c1c';
                 return;
             }
 
@@ -194,24 +330,33 @@
             const res = await fetch(`${API}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password, role, fullName, phone })
             });
 
             if (res.ok) {
-                msg.textContent = '¡Usuario creado con éxito!';
+                const data = await res.json();
+                msg.textContent = `✅ ${role === 'admin' ? 'Administrador' : 'Cristalero'} "${fullName}" creado con éxito.`;
                 msg.style.display = 'block';
-                msg.className = 'badge-success';
+                msg.style.background = '#dcfce7';
+                msg.style.color = '#166534';
                 document.getElementById('create-user-form').reset();
                 fetchUsers();
             } else {
-                msg.textContent = 'Error al crear usuario (posiblemente ya existe).';
+                const err = await res.json();
+                msg.textContent = `❌ ${err.message || 'Error al crear usuario.'}`;
                 msg.style.display = 'block';
-                msg.className = 'badge-warning';
+                msg.style.background = '#fee2e2';
+                msg.style.color = '#b91c1c';
             }
+
+            setTimeout(() => { msg.style.display = 'none'; }, 4000);
         };
 
-        if (!localStorage.getItem('token')) window.location.href = 'index.html';
-        else fetchUsers();
+        if (!localStorage.getItem('token') || localStorage.getItem('userRole') !== 'admin') {
+            window.location.href = 'index.html';
+        } else {
+            fetchUsers();
+        }
     </script>
 </body>
 
